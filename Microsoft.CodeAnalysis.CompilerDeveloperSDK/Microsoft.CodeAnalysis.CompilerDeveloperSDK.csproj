@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>C:\git\compiler-developer-sdk\Microsoft.CodeAnalysis.CompilerDeveloperSDK.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
+    <PackageReference Include="Microsoft.CommonLanguageServerProtocol.Framework" />
+    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK" />
+  </ItemGroup>
+
+</Project>
