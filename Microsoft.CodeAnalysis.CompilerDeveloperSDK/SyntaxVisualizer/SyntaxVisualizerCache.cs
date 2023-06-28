@@ -3,6 +3,11 @@ using Microsoft.CodeAnalysis.LanguageServer.Handler;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSDK;
 
-public class SyntaxVisualizerCache : ICompilerDeveloperSdkLspService
+class SyntaxVisualizerCache : ResolveCache<SyntaxVisualizerCacheEntry>, ICompilerDeveloperSdkLspService
 {
+    public SyntaxVisualizerCache() : base(3)
+    {
+    }
 }
+
+record SyntaxVisualizerCacheEntry(IReadOnlyDictionary<int, SyntaxNodeOrTokenOrTrivia> NodeMap, IReadOnlyDictionary<SyntaxNodeOrTokenOrTrivia, int> IdMap);
