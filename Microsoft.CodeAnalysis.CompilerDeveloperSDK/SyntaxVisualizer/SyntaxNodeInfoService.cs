@@ -79,7 +79,7 @@ sealed class SyntaxNodeInfoService : ICompilerDeveloperSdkLspServiceDocumentRequ
 
         var response = new SyntaxNodeInfoResponse
         {
-            NodeType = new() { Symbol = item.GetUnderlyingType().ToString(), SymbolKind = item.Node is null ? "struct" : "class" },
+            NodeType = new() { Symbol = item.GetUnderlyingType().ToString(), SymbolKind = item.Node is null ? "Struct" : "Class" },
             NodeSyntaxKind = item.Kind(),
             Properties = item.GetPublicProperties(),
             SemanticClassification = classification.FirstOrDefault().ClassificationType,
@@ -130,8 +130,11 @@ sealed class SyntaxNodeInfoService : ICompilerDeveloperSdkLspServiceDocumentRequ
 
         static string GetKindString(ISymbol symbol) => symbol switch
         {
+            IAliasSymbol { Target: var t } => GetKindString(t),
             ITypeSymbol { TypeKind: var t } => t.ToString(),
-            IMethodSymbol { MethodKind: var m } => m.ToString(),
+            IMethodSymbol { MethodKind: MethodKind.BuiltinOperator or MethodKind.UserDefinedOperator } => "Operator",
+            IMethodSymbol { MethodKind: MethodKind.Constructor or MethodKind.Destructor or MethodKind.StaticConstructor } => "Constructor",
+            IFieldSymbol { ContainingType.TypeKind: TypeKind.Enum } => "EnumMember",
             { Kind: var k } => k.ToString(),
         };
     }

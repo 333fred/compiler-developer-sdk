@@ -10,7 +10,10 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:net-compiler-developer-sdk.helloWorld"
+    "onLanguage:csharp"
+  ],
+  "extensionDependencies": [
+    "ms-dotnettools.csharp"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -19,7 +22,41 @@
         "command": "net-compiler-developer-sdk.helloWorld",
         "title": "Hello World"
       }
+    ],
+    "activitybar": [
+      {
+        "id": "csharp-syntax-visualizer",
+        "title": "CSharp Syntax Visualizer",
+        "icon": "images/syntaxtree.ico"
+      }
+    ],
+    "views": {
+      "csharp-syntax-visualizer": [
+        {
+          "id": "syntaxTree",
+          "name": "Syntax Tree",
+          "type": "tree",
+          "when": "config.csharp.enableSyntaxVisualizer"
+        },
+        {
+          "id": "syntaxProperties",
+          "name": "Syntax Node Properties",
+          "when": "config.csharp.enableSyntaxVisualizer"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "syntaxTree",
+        "contents": "No C# file opened."
+      }
     ]
+  },
+  "dependencies": {
+    "vscode-languageclient": "8.2.0-next.1",
+    "vscode-languageserver-protocol": "3.17.4-next.1",
+    "vscode-nls": "5.0.1",
+    "vscode-jsonrpc": "8.2.0-next.0"
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

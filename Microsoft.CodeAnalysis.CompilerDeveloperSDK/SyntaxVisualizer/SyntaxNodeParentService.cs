@@ -13,8 +13,8 @@ sealed class SyntaxNodeParentRequest
 {
     [DataMember(Name = "textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "child")]
-    public required SyntaxTreeNode Child { get; init; }
+    [DataMember(Name = "childId")]
+    public required int ChildId { get; init; }
 }
 
 [DataContract]
@@ -51,7 +51,7 @@ class SyntaxNodeParentService : ICompilerDeveloperSdkLspServiceDocumentRequestHa
         var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
         Debug.Assert(text is not null);
 
-        var child = entry.NodeMap[request.Child.NodeId];
+        var child = entry.NodeMap[request.ChildId];
 
         return child.Node is CompilationUnitSyntax
             ? new SyntaxNodeParentResponse()

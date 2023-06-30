@@ -19,8 +19,8 @@ sealed class SyntaxTreeRequest : ITextDocumentParams
 
 sealed class SyntaxTreeResponse
 {
-    [DataMember(Name = "syntaxTree")]
-    public required ImmutableArray<SyntaxTreeNode> SyntaxTree { get; init; }
+    [DataMember(Name = "nodes")]
+    public required ImmutableArray<SyntaxTreeNode> Nodes { get; init; }
 }
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxTreeService)), Shared]
@@ -50,9 +50,9 @@ sealed class SyntaxTreeService : ICompilerDeveloperSdkLspServiceDocumentRequestH
 
         return request.ParentNodeId switch
         {
-            null => new SyntaxTreeResponse { SyntaxTree = ImmutableArray.Create(SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], text!, nodeId: 0)) },
-            int parentId when cacheEntry.NodeMap.TryGetValue(parentId, out var parentItem) => new SyntaxTreeResponse { SyntaxTree = parentItem.GetChildren().Select(s => SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(s, text!, cacheEntry.IdMap[s])).ToImmutableArray() },
-            _ => new SyntaxTreeResponse { SyntaxTree = ImmutableArray<SyntaxTreeNode>.Empty }
+            null => new SyntaxTreeResponse { Nodes = ImmutableArray.Create(SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], text!, nodeId: 0)) },
+            int parentId when cacheEntry.NodeMap.TryGetValue(parentId, out var parentItem) => new SyntaxTreeResponse { Nodes = parentItem.GetChildren().Select(s => SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(s, text!, cacheEntry.IdMap[s])).ToImmutableArray() },
+            _ => new SyntaxTreeResponse { Nodes = ImmutableArray<SyntaxTreeNode>.Empty }
         };
     }
 }

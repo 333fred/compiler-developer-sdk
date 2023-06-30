@@ -10,10 +10,10 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}/net-compiler-developer-sdk"
 			],
 			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
+				"${workspaceFolder}/net-compiler-developer-sdk/dist/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
@@ -22,12 +22,12 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+				"--extensionDevelopmentPath=${workspaceFolder}/net-compiler-developer-sdk",
+				"--extensionTestsPath=${workspaceFolder}/net-compiler-developer-sdk/out/test/suite/index"
 			],
 			"outFiles": [
-				"${workspaceFolder}/out/**/*.js",
-				"${workspaceFolder}/dist/**/*.js"
+				"${workspaceFolder}/net-compiler-developer-sdk/out/**/*.js",
+				"${workspaceFolder}/net-compiler-developer-sdk/dist/**/*.js"
 			],
 			"preLaunchTask": "tasks: watch-tests"
 		}

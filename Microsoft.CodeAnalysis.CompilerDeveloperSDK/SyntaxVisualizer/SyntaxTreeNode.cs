@@ -23,7 +23,7 @@ sealed class SyntaxTreeNode
     {
         return new SyntaxTreeNode
         {
-            NodeType = new() { Symbol = element.Kind(), SymbolKind = element.Node is null ? "struct" : "class" },
+            NodeType = new() { Symbol = element.Kind(), SymbolKind = element.Node is null ? "Struct" : "Class" },
             HasChildren = element.HasChildren(),
             NodeId = nodeId,
             Range = ProtocolConversions.TextSpanToRange(element.GetFullSpan(), text),
@@ -34,12 +34,12 @@ sealed class SyntaxTreeNode
 [DataContract]
 record struct SymbolAndKind
 {
-    public static SymbolAndKind Null { get; } = new() { Symbol = "<null>", SymbolKind = null };
+    public static SymbolAndKind Null { get; } = new() { Symbol = "<null>", SymbolKind = "Unknown" };
 
     [DataMember(Name = "symbol")]
     public required string Symbol { get; set; }
     [DataMember(Name = "symbolKind")]
-    public string? SymbolKind { get; set; }
+    public required string SymbolKind { get; set; }
 
     public override readonly string ToString()
     {
