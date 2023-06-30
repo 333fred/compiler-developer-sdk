@@ -8,6 +8,6 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CommonLanguageServerProtocol.Framework" Version="$(MicrosoftCodeAnalysisVersion)" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" Version="$(MicrosoftCodeAnalysisVersion)" />
   </ItemGroup>
 </Project>

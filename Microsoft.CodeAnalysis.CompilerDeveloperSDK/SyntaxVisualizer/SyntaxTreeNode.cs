@@ -1,10 +1,14 @@
 using System.Runtime.Serialization;
+
+using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
+using Microsoft.CodeAnalysis.Text;
+
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
-namespace Microsoft.CodeAnalysis.CompilerDeveloperSDK;
+namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
-record SyntaxTreeNode
+sealed class SyntaxTreeNode
 {
     [DataMember(Name = "nodeType")]
     public required SymbolAndKind NodeType { get; set; }
@@ -12,12 +16,23 @@ record SyntaxTreeNode
     public required LSP.Range Range { get; set; }
     [DataMember(Name = "hasChildren")]
     public required bool HasChildren { get; set; }
-    [DataMember(Name = "id")]
-    public required int Id { get; set; }
+    [DataMember(Name = "nodeId")]
+    public required int NodeId { get; set; }
+
+    public static SyntaxTreeNode NodeOrTokenOrTriviaToTreeItem(SyntaxNodeOrTokenOrTrivia element, SourceText text, int nodeId)
+    {
+        return new SyntaxTreeNode
+        {
+            NodeType = new() { Symbol = element.Kind(), SymbolKind = element.Node is null ? "struct" : "class" },
+            HasChildren = element.HasChildren(),
+            NodeId = nodeId,
+            Range = ProtocolConversions.TextSpanToRange(element.GetFullSpan(), text),
+        };
+    }
 }
 
 [DataContract]
-struct SymbolAndKind
+record struct SymbolAndKind
 {
     public static SymbolAndKind Null { get; } = new() { Symbol = "<null>", SymbolKind = null };
 

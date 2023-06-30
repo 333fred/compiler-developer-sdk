@@ -1,8 +1,10 @@
+using System.Collections.Immutable;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.CodeAnalysis.CompilerDeveloperSDK;
+namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 public readonly record struct SyntaxNodeOrTokenOrTrivia
 {
@@ -84,7 +86,7 @@ public readonly record struct SyntaxNodeOrTokenOrTrivia
 
     public SyntaxNodeOrToken Parent => _nodeOrToken is { Parent: var parent } ? parent : Trivia!.Value.Token;
 
-    public Dictionary<string, string> GetPublicProperties()
+    public ImmutableDictionary<string, string> GetPublicProperties()
     {
         var @object = _nodeOrToken is { } nodeOrToken
             ? (nodeOrToken.AsNode() is { } node ? node : nodeOrToken.AsToken())
@@ -92,7 +94,7 @@ public readonly record struct SyntaxNodeOrTokenOrTrivia
 
         var type = @object.GetType();
 
-        return type.GetProperties().Where(p => p.Name != "Kind" && p.CanRead).ToDictionary(
+        return type.GetProperties().Where(p => p.Name != "Kind" && p.CanRead).ToImmutableDictionary(
             static s => s.Name,
             s => s.GetValue(@object) switch
             {

@@ -70,6 +70,7 @@ dotnet_remove_unnecessary_suppression_exclusions = none
 
 dotnet_diagnostic.RS0016.severity = none
 dotnet_diagnostic.RS0037.severity = none
+dotnet_diagnostic.VSTHRD200.severity = none
 dotnet_public_api_analyzer.require_api_files = false
 
 #### C# Coding Conventions ####
