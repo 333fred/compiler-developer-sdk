@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Composition;
 using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.Classification;
@@ -58,13 +59,23 @@ sealed class NodeTypeInfo
     public string? Conversion { get; set; }
 }
 
-sealed class SyntaxNodeInfoService : ICompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse?>
+[ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeInfoService)), Shared]
+[CompilerDeveloperSdkMethod(Endpoints.SyntaxTreeNodeInfo)]
+sealed class SyntaxNodeInfoService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse?>
 {
-    public bool MutatesSolutionState => throw new NotImplementedException();
+    [ImportingConstructor]
+    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+    public SyntaxNodeInfoService()
+    {
+    }
 
-    public TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeInfoRequest request) => request.TextDocument;
+    public override bool MutatesSolutionState => false;
 
-    public async Task<SyntaxNodeInfoResponse?> HandleRequestAsync(SyntaxNodeInfoRequest request, RequestContext context, CancellationToken cancellationToken)
+    public override bool RequiresLSPSolution => true;
+
+    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeInfoRequest request) => request.TextDocument;
+
+    public override async Task<SyntaxNodeInfoResponse?> HandleRequestAsync(SyntaxNodeInfoRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<SyntaxVisualizerCache>();
         var document = context.GetRequiredDocument();

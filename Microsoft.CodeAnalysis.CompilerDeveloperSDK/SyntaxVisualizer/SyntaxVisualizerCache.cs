@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
-sealed class SyntaxVisualizerCache : ICompilerDeveloperSdkLspService
+sealed class SyntaxVisualizerCache : AbstractCompilerDeveloperSdkLspService
 {
     private readonly ConditionalWeakTable<Document, DocumentSyntaxInformation> _cache = new();
 
@@ -84,7 +84,7 @@ sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTok
 }
 
 [ExportCompilerDeveloperSdkLspServiceFactory(typeof(SyntaxVisualizerCache)), Shared]
-sealed class SyntaxVisualizerCacheFactory : ICompilerDeveloperSdkLspServiceFactory
+sealed class SyntaxVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory
 {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
@@ -92,5 +92,5 @@ sealed class SyntaxVisualizerCacheFactory : ICompilerDeveloperSdkLspServiceFacto
     {
     }
 
-    public ICompilerDeveloperSdkLspService CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new SyntaxVisualizerCache();
+    public override SyntaxVisualizerCache CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new();
 }

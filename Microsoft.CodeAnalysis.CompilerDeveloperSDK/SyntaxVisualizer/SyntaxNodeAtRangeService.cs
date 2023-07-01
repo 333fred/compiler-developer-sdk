@@ -28,7 +28,7 @@ sealed class SyntaxNodeAtRangeResponse
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeAtRangeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxNodeAtRange)]
-sealed class SyntaxNodeAtRangeService : ICompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeAtRangeRequest, SyntaxNodeAtRangeResponse>
+sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeAtRangeRequest, SyntaxNodeAtRangeResponse>
 {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
@@ -36,11 +36,13 @@ sealed class SyntaxNodeAtRangeService : ICompilerDeveloperSdkLspServiceDocumentR
     {
     }
 
-    public bool MutatesSolutionState => false;
+    public override bool MutatesSolutionState => false;
 
-    public TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeAtRangeRequest request) => request.TextDocument;
+    public override bool RequiresLSPSolution => true;
 
-    public async Task<SyntaxNodeAtRangeResponse> HandleRequestAsync(SyntaxNodeAtRangeRequest request, RequestContext context, CancellationToken cancellationToken)
+    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeAtRangeRequest request) => request.TextDocument;
+
+    public override async Task<SyntaxNodeAtRangeResponse> HandleRequestAsync(SyntaxNodeAtRangeRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<SyntaxVisualizerCache>();
         var document = context.GetRequiredDocument();

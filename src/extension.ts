@@ -3,12 +3,19 @@
 import * as vscode from 'vscode';
 import { CSharpExtension } from './csharpExtensionExports';
 import { createSyntaxVisualizerProvider } from './syntaxVisualizerProvider';
+import { log } from 'node:console';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
     const csharpExtension = vscode.extensions.getExtension('ms-dotnettools.csharp')?.exports as CSharpExtension;
+
+    if (!csharpExtension) {
+        throw new Error('Could not find C# extension');
+    }
+
+    await csharpExtension.initializationFinished();
 
     const disposables = createSyntaxVisualizerProvider(csharpExtension);
     context.subscriptions.push(...disposables);

@@ -10,10 +10,11 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/net-compiler-developer-sdk"
+				"--extensionDevelopmentPath=${workspaceFolder}/../vscode-csharp",
+				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
-				"${workspaceFolder}/net-compiler-developer-sdk/dist/**/*.js"
+				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
@@ -22,12 +23,12 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/net-compiler-developer-sdk",
-				"--extensionTestsPath=${workspaceFolder}/net-compiler-developer-sdk/out/test/suite/index"
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
 			],
 			"outFiles": [
-				"${workspaceFolder}/net-compiler-developer-sdk/out/**/*.js",
-				"${workspaceFolder}/net-compiler-developer-sdk/dist/**/*.js"
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "tasks: watch-tests"
 		}

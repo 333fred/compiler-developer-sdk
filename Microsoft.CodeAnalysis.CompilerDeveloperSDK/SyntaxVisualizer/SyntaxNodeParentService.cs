@@ -26,7 +26,7 @@ sealed class SyntaxNodeParentResponse
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeParentService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxNodeParent)]
-class SyntaxNodeParentService : ICompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeParentRequest, SyntaxNodeParentResponse>
+class SyntaxNodeParentService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeParentRequest, SyntaxNodeParentResponse>
 {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
@@ -34,11 +34,13 @@ class SyntaxNodeParentService : ICompilerDeveloperSdkLspServiceDocumentRequestHa
     {
     }
 
-    public bool MutatesSolutionState => false;
+    public override bool MutatesSolutionState => false;
 
-    public TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeParentRequest request) => request.TextDocument;
+    public override bool RequiresLSPSolution => true;
 
-    public async Task<SyntaxNodeParentResponse> HandleRequestAsync(SyntaxNodeParentRequest request, RequestContext context, CancellationToken cancellationToken)
+    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeParentRequest request) => request.TextDocument;
+
+    public override async Task<SyntaxNodeParentResponse> HandleRequestAsync(SyntaxNodeParentRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<SyntaxVisualizerCache>();
         var document = context.GetRequiredDocument();

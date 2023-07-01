@@ -3,7 +3,6 @@ using System.Composition;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
-using Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
@@ -14,9 +13,11 @@ sealed class SyntaxTreeRequest : ITextDocumentParams
 {
     [DataMember(Name = "textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
+    [DataMember(Name = "parentNodeId")]
     public int? ParentNodeId { get; init; }
 }
 
+[DataContract]
 sealed class SyntaxTreeResponse
 {
     [DataMember(Name = "nodes")]
@@ -25,7 +26,7 @@ sealed class SyntaxTreeResponse
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxTreeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxTree)]
-sealed class SyntaxTreeService : ICompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxTreeRequest, SyntaxTreeResponse>
+sealed class SyntaxTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxTreeRequest, SyntaxTreeResponse>
 {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
@@ -33,11 +34,13 @@ sealed class SyntaxTreeService : ICompilerDeveloperSdkLspServiceDocumentRequestH
     {
     }
 
-    public bool MutatesSolutionState => false;
+    public override bool MutatesSolutionState => false;
 
-    public TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxTreeRequest request) => request.TextDocument;
+    public override bool RequiresLSPSolution => true;
 
-    public async Task<SyntaxTreeResponse> HandleRequestAsync(SyntaxTreeRequest request, RequestContext context, CancellationToken cancellationToken)
+    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxTreeRequest request) => request.TextDocument;
+
+    public override async Task<SyntaxTreeResponse> HandleRequestAsync(SyntaxTreeRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<SyntaxVisualizerCache>();
 

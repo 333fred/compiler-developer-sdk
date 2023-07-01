@@ -2,8 +2,8 @@
 
 static class Endpoints
 {
-    public const string SyntaxTree = "syntaxtree";
-    public const string SyntaxNodeAtRange = "syntaxtree/nodeatrange";
-    public const string SyntaxNodeParent = "syntaxtree/parentnode";
-    public const string SyntaxTreeNodeInfo = "syntaxtree/info";
+    public const string SyntaxTree = "syntaxTree";
+    public const string SyntaxNodeAtRange = "syntaxTree/nodeAtRange";
+    public const string SyntaxNodeParent = "syntaxTree/parentNode";
+    public const string SyntaxTreeNodeInfo = "syntaxTree/info";
 }
