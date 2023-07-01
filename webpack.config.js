@@ -2,7 +2,7 @@
 
 'use strict';
 
-import { resolve as _resolve } from 'path';
+const path = require('path');
 
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
@@ -15,7 +15,7 @@ const extensionConfig = {
   entry: './src/extension/extension.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
   output: {
     // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
-    path: _resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
     libraryTarget: 'commonjs2'
   },
@@ -45,4 +45,4 @@ const extensionConfig = {
     level: "log", // enables logging required for problem matchers
   },
 };
-export default [ extensionConfig ];
+module.exports = [ extensionConfig ];
