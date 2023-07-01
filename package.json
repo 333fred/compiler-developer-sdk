@@ -3,6 +3,10 @@
     "displayName": ".NET Compiler Developer SDK",
     "description": "",
     "version": "0.0.1",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/333fred/compiler-developer-sdk"
+    },
     "engines": {
         "vscode": "^1.75.0"
     },
