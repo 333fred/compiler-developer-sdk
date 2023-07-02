@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\Microsoft.CodeAnalysis.CompilerDeveloperSdk.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\..\..\Microsoft.CodeAnalysis.CompilerDeveloperSdk.snk</AssemblyOriginatorKeyFile>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
@@ -13,13 +13,20 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.CommonLanguageServerProtocol.Framework"
       ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" />
+    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" ExcludeAssets="runtime" GeneratePathProperty="true" />
   </ItemGroup>
-<!-- 
-  <Target Name="PackLayout" BeforeTargets="$(GenerateNuspecDependsOn)">
-    <ItemGroup>
-      <Content Include="$(CompilerDeveloperSdkPackagePath)\**\*.*" PackagePath="lib\$(TargetFramework)" />
-    </ItemGroup>
-  </Target> -->
+
+  <Target Name="VscePrepublish"
+    DependsOnTargets="Build"
+    Inputs="$(TargetPath));
+            $(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)"
+    Outputs="$(MSBuildThisFileDirectory)..\..\dist\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;
+             $(MSBuildThisFileDirectory)..\..\dist\Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll">
+
+    <Copy
+        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net7.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll"
+        DestinationFolder="$(MSBuildThisFileDirectory)..\..\dist">
+    </Copy>
+  </Target>
 
 </Project>

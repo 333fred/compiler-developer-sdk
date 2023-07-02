@@ -11,3 +11,9 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+**/*.snk
+**/*.sln
+**/*.props
+**/*.targets
+**/*.config
+**/*.ps1
