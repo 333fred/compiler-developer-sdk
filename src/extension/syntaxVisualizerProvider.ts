@@ -16,7 +16,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension)
                 lsp.Position.create(firstSelection.start.line, firstSelection.start.character),
                 lsp.Position.create(firstSelection.end.line, firstSelection.end.character));
             const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.fileName);
-            const response = await csharpExtension.sendRequest(syntaxNodeAtRangeRequest, { textDocument, range }, lsp.CancellationToken.None);
+            const response = await csharpExtension.experimental.sendServerRequest(syntaxNodeAtRangeRequest, { textDocument, range }, lsp.CancellationToken.None);
 
             if (!response || !response.node) {
                 return;
@@ -42,7 +42,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension)
         if (event.selection && event.selection.length > 0) {
             const activeNode = event.selection[0];
             try {
-                const info = await csharpExtension.sendRequest(syntaxNodeInfoRequest, { textDocument: activeNode.identifier, node: activeNode.node }, lsp.CancellationToken.None);
+                const info = await csharpExtension.experimental.sendServerRequest(syntaxNodeInfoRequest, { textDocument: activeNode.identifier, node: activeNode.node }, lsp.CancellationToken.None);
                 propertyTreeProvider.setSyntaxNodeInfo(info);
             }
             catch (e) {
@@ -118,7 +118,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
             identifier = element.identifier;
         }
 
-        const children = await this.server.sendRequest(
+        const children = await this.server.experimental.sendServerRequest(
             syntaxTree,
             { textDocument: identifier, parentNodeId: element?.node.nodeId },
             lsp.CancellationToken.None);
@@ -131,7 +131,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
     }
 
     async getParent(element: SyntaxTreeNodeAndFile): Promise<SyntaxTreeNodeAndFile | undefined> {
-        const response = await this.server.sendRequest(syntaxNodeParentRequest, { textDocument: element.identifier, childId: element.node.nodeId }, lsp.CancellationToken.None);
+        const response = await this.server.experimental.sendServerRequest(syntaxNodeParentRequest, { textDocument: element.identifier, childId: element.node.nodeId }, lsp.CancellationToken.None);
         if (!response || !response.parent) {
             return undefined;
         }

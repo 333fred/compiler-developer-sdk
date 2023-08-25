@@ -23,6 +23,7 @@
     ],
     "main": "./dist/extension.js",
     "contributes": {
+        "csharpExtensionLoadPaths": ["Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"],
         "viewsContainers": {
             "activitybar": [
                 {
