@@ -30,6 +30,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - name: Install VSCE
+      run: npm install @vscode/vsce --save-dev
     - name: Restore dependencies
       run: dotnet restore -bl:logs\Restore.binlog
     - name: Build
