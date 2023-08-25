@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\..\..\Microsoft.CodeAnalysis.CompilerDeveloperSdk.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\..\..\Microsoft.CodeAnalysis.CompilerDeveloperSDK.snk</AssemblyOriginatorKeyFile>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
