@@ -39,12 +39,12 @@
                     "id": "syntaxTree",
                     "name": "Syntax Tree",
                     "type": "tree",
-                    "when": "config.compilerdevelopersdk.enableSyntaxVisualizer"
+                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
                 },
                 {
                     "id": "syntaxProperties",
                     "name": "Syntax Node Properties",
-                    "when": "config.compilerdevelopersdk.enableSyntaxVisualizer"
+                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
                 }
             ]
         },
@@ -57,9 +57,10 @@
         "configuration": {
             "title": ".NET Compiler Developer SDK",
             "properties": {
-                "compilerdevelopersdk.enableSyntaxVisualizer": {
+                "compilerDeveloperSdk.enableSyntaxVisualizer": {
                     "type": "boolean",
                     "default": true,
+                    "title": "C# Syntax Visualizer",
                     "description": "Enable the C# Syntax Visualizer"
                 }
             }
