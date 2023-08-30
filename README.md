@@ -16,7 +16,7 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Extension Settings
 
-Currently none.
+`"compilerdevelopersdk.enableSyntaxVisualizer"` - Turn on or off the C# Syntax Visualizer (defaults to on).
 
 ## Known Issues
 

@@ -39,12 +39,12 @@
                     "id": "syntaxTree",
                     "name": "Syntax Tree",
                     "type": "tree",
-                    "when": "config.csharp.enableSyntaxVisualizer"
+                    "when": "config.compilerdevelopersdk.enableSyntaxVisualizer"
                 },
                 {
                     "id": "syntaxProperties",
                     "name": "Syntax Node Properties",
-                    "when": "config.csharp.enableSyntaxVisualizer"
+                    "when": "config.compilerdevelopersdk.enableSyntaxVisualizer"
                 }
             ]
         },
@@ -53,7 +53,17 @@
                 "view": "syntaxTree",
                 "contents": "No C# file opened."
             }
-        ]
+        ],
+        "configuration": {
+            "title": ".NET Compiler Developer SDK",
+            "properties": {
+                "compilerdevelopersdk.enableSyntaxVisualizer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable the C# Syntax Visualizer"
+                }
+            }
+        }
     },
     "dependencies": {
         "vscode-languageclient": "8.2.0-next.1"
