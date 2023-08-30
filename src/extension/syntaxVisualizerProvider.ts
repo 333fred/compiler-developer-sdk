@@ -3,11 +3,13 @@ import { CSharpExtension } from "./csharpExtensionExports";
 import * as lsp from 'vscode-languageserver-protocol';
 import assert = require('node:assert');
 
-export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension): vscode.Disposable[] {
+export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension, output : vscode.OutputChannel): vscode.Disposable[] {
     const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension);
     const treeView = vscode.window.createTreeView('syntaxTree', { treeDataProvider: syntaxTreeProvider });
     const propertyTreeProvider = new SyntaxNodePropertyTreeProvider();
     const propertyViewDisposable = vscode.window.registerTreeDataProvider('syntaxProperties', propertyTreeProvider);
+
+    output.appendLine("SyntaxVisualizer views registered");
 
     const editorTextSelectionChangeDisposable = vscode.window.onDidChangeTextEditorSelection(async event => {
         if (treeView.visible && event.selections.length > 0) {
