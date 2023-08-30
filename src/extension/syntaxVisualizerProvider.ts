@@ -12,7 +12,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
     output.appendLine("SyntaxVisualizer views registered");
 
     const editorTextSelectionChangeDisposable = vscode.window.onDidChangeTextEditorSelection(async event => {
-        if (treeView.visible && event.selections.length > 0) {
+        if (treeView.visible && event.selections.length > 0 && event.textEditor.document.languageId === "csharp") {
             const firstSelection = event.selections[0];
             const range: lsp.Range = lsp.Range.create(
                 lsp.Position.create(firstSelection.start.line, firstSelection.start.character),
