@@ -1,9 +1,9 @@
 {
     "name": "net-compiler-developer-sdk",
     "displayName": ".NET Compiler Developer SDK",
-    "publisher": "Fred Silberberg",
+    "publisher": "333fred",
     "description": "VS Code extension for working with and on the Roslyn compiler.",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "icon": "images/roslyn_icon_color.png",
     "repository": {
         "type": "git",

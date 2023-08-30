@@ -16,12 +16,12 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Extension Settings
 
-TODO
+Currently none.
 
 ## Known Issues
 
-TODO
+Currently none.
 
 ## Release Notes
 
-TODO
+0.1.0 - First prerelease
