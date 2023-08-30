@@ -4,7 +4,7 @@ import * as lsp from 'vscode-languageserver-protocol';
 import assert = require('node:assert');
 
 export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension, output : vscode.OutputChannel): vscode.Disposable[] {
-    const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension);
+    const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension, output);
     const treeView = vscode.window.createTreeView('syntaxTree', { treeDataProvider: syntaxTreeProvider });
     const propertyTreeProvider = new SyntaxNodePropertyTreeProvider();
     const propertyViewDisposable = vscode.window.registerTreeDataProvider('syntaxProperties', propertyTreeProvider);
@@ -71,18 +71,22 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
     private readonly _disposables: vscode.Disposable[];
     private readonly _onDidChangeTreeData: vscode.EventEmitter<SyntaxTreeNodeAndFile | undefined> = new vscode.EventEmitter<SyntaxTreeNodeAndFile | undefined>();
 
-    constructor(private server: CSharpExtension) {
+    constructor(private server: CSharpExtension, private output: vscode.OutputChannel) {
 
         this._wordHighlightBackground = new vscode.ThemeColor('editor.wordHighlightBackground');
         this._wordHighlightBorder = new vscode.ThemeColor('editor.wordHighlightBorder');
         this._decorationType = vscode.window.createTextEditorDecorationType({ backgroundColor: this._wordHighlightBackground, borderColor: this._wordHighlightBorder });
 
         const activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(() => {
+            this.output.appendLine("Active editor changed");
             this._onDidChangeTreeData.fire(undefined);
         });
 
         const textDocumentChangedDisposable = vscode.workspace.onDidChangeTextDocument(async event => {
-            this._onDidChangeTreeData.fire(undefined);
+            if (event.document.languageId === "csharp") {
+                this.output.appendLine("Text document changed");
+                this._onDidChangeTreeData.fire(undefined);
+            }
         });
 
         const highlightRangeCommandDisposable = vscode.commands.registerCommand(highlightEditorRangeCommand, (node) => this._highlightRange(node), this);

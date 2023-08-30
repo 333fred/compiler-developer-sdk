@@ -10,7 +10,6 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/../vscode-csharp",
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
