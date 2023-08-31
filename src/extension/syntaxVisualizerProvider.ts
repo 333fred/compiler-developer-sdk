@@ -155,12 +155,13 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
         if (!activeTextEditor) {
             return;
         }
-        activeTextEditor.setDecorations(this._decorationType, [vscodeRange]);
 
         if (vscode.workspace.getConfiguration("compilerDeveloperSdk").get("syncCursorWithTree")) {
             activeTextEditor.revealRange(vscodeRange);
             activeTextEditor.selection = new vscode.Selection(vscodeRange.start, vscodeRange.start);
         }
+
+        activeTextEditor.setDecorations(this._decorationType, [vscodeRange]);
     }
 
     private _clearHighlight() {
