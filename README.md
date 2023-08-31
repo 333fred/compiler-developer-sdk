@@ -24,6 +24,12 @@ Currently none.
 
 ## Release Notes
 
+### 0.1.2-prerelease
+
+* b4cda2a Implement feature request: sync the cursor position when clicking in the tree view and reveal the location if offscreen.
+* b804ffb Add verbose logging option.
+* 10ae84f Only fire a text document changed tree refresh if the document is a C# file.
+
 ### 0.1.1
 
 * 4c2e3f3 Correct conditional display of the syntax visualizer, and contribute the setting for disabling it.
