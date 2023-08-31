@@ -63,6 +63,12 @@
                     "title": "C# Syntax Visualizer",
                     "description": "Enable the C# Syntax Visualizer"
                 },
+                "compilerDeveloperSdk.syncCursorWithTree": {
+                    "type": "boolean",
+                    "default": true,
+                    "title": "Sync Cursor Position in File with Tree",
+                    "description": "When clicking a tree element, sync the cursor position in the file with the tree element"
+                },
                 "compilerDeveloperSdk.verboseLogging": {
                     "type": "boolean",
                     "default": false,
