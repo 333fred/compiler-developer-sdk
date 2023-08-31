@@ -62,6 +62,12 @@
                     "default": true,
                     "title": "C# Syntax Visualizer",
                     "description": "Enable the C# Syntax Visualizer"
+                },
+                "compilerDeveloperSdk.verboseLogging": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "Verbose Logging",
+                    "description": "Enable verbose logging for the .NET Compiler Developer SDK"
                 }
             }
         }

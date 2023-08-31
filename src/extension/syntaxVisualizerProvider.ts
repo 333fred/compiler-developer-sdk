@@ -2,14 +2,15 @@ import * as vscode from 'vscode';
 import { CSharpExtension } from "./csharpExtensionExports";
 import * as lsp from 'vscode-languageserver-protocol';
 import assert = require('node:assert');
+import { Logger } from './logger';
 
-export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension, output : vscode.OutputChannel): vscode.Disposable[] {
-    const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension, output);
+export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
+    const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension, logger);
     const treeView = vscode.window.createTreeView('syntaxTree', { treeDataProvider: syntaxTreeProvider });
     const propertyTreeProvider = new SyntaxNodePropertyTreeProvider();
     const propertyViewDisposable = vscode.window.registerTreeDataProvider('syntaxProperties', propertyTreeProvider);
 
-    output.appendLine("SyntaxVisualizer views registered");
+    logger.log("SyntaxVisualizer views registered");
 
     const editorTextSelectionChangeDisposable = vscode.window.onDidChangeTextEditorSelection(async event => {
         if (treeView.visible && event.selections.length > 0 && event.textEditor.document.languageId === "csharp") {
@@ -71,20 +72,20 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
     private readonly _disposables: vscode.Disposable[];
     private readonly _onDidChangeTreeData: vscode.EventEmitter<SyntaxTreeNodeAndFile | undefined> = new vscode.EventEmitter<SyntaxTreeNodeAndFile | undefined>();
 
-    constructor(private server: CSharpExtension, private output: vscode.OutputChannel) {
+    constructor(private server: CSharpExtension, private logger: Logger) {
 
         this._wordHighlightBackground = new vscode.ThemeColor('editor.wordHighlightBackground');
         this._wordHighlightBorder = new vscode.ThemeColor('editor.wordHighlightBorder');
         this._decorationType = vscode.window.createTextEditorDecorationType({ backgroundColor: this._wordHighlightBackground, borderColor: this._wordHighlightBorder });
 
         const activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(() => {
-            this.output.appendLine("Active editor changed");
+            this.logger.logDebug("Active editor changed");
             this._onDidChangeTreeData.fire(undefined);
         });
 
         const textDocumentChangedDisposable = vscode.workspace.onDidChangeTextDocument(async event => {
             if (event.document.languageId === "csharp") {
-                this.output.appendLine("Text document changed");
+                this.logger.logDebug("Text document changed");
                 this._onDidChangeTreeData.fire(undefined);
             }
         });
