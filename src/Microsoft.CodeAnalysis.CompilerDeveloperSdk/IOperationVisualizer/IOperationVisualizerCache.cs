@@ -25,7 +25,7 @@ sealed class IOperationVisualizerCache : AbstractCompilerDeveloperSdkLspService
     {
         if (!TryGetCachedEntry(document, out var entry))
         {
-            entry = await DocumentIOperationInformation.CreateFromDocument(document).ConfigureAwait(false);
+            entry = await DocumentIOperationInformation.CreateFromDocument(document, cancellationToken).ConfigureAwait(false);
             SetCachedEntry(document, entry);
         }
 
@@ -33,29 +33,30 @@ sealed class IOperationVisualizerCache : AbstractCompilerDeveloperSdkLspService
     }
 }
 
+// TODO: This won't work if there are mutliple partial parts in one file. Need to map from node to syntax+symbol to handle this
 sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, ISymbol> IdToSymbol, IReadOnlyDictionary<ISymbol, int> SymbolToId)
 {
-    public static async Task<DocumentIOperationInformation> CreateFromDocument(Document document)
+    public static async Task<DocumentIOperationInformation> CreateFromDocument(Document document, CancellationToken ct)
     {
-        var (idToSymbol, symbolToId) = await BuildIdMap(document);
+        var (idToSymbol, symbolToId) = await BuildIdMap(document, ct);
         return new DocumentIOperationInformation(idToSymbol, symbolToId);
 
-        static async Task<(Dictionary<int, ISymbol> idToSymbol, Dictionary<ISymbol, int> symbolToId)> BuildIdMap(Document document)
+        static async Task<(Dictionary<int, ISymbol> idToSymbol, Dictionary<ISymbol, int> symbolToId)> BuildIdMap(Document document, CancellationToken ct)
         {
             // First time we've seen this file. Build the map
             int id = 0;
             var idToSymbol = new Dictionary<int, ISymbol>();
             var symbolToId = new Dictionary<ISymbol, int>(SymbolEqualityComparer.Default);
 
-            var root = await document.GetSyntaxRootAsync().ConfigureAwait(false);
-            var model = await document.GetSemanticModelAsync().ConfigureAwait(false);
+            var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
+            var model = await document.GetSemanticModelAsync(ct).ConfigureAwait(false);
 
             Debug.Assert(root != null);
             Debug.Assert(model != null);
 
             foreach (var decl in root.DescendantNodes().OfType<MemberDeclarationSyntax>())
             {
-                if (model.GetDeclaredSymbol(decl) is { } symbol)
+                if (model.GetDeclaredSymbol(decl, ct) is { } symbol)
                 {
                     idToSymbol[id] = symbol;
                     symbolToId[symbol] = id;
@@ -65,7 +66,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, ISymbol> Id
                 {
                     foreach (var variable in variables)
                     {
-                        if (model.GetDeclaredSymbol(variable) is { } variableSymbol)
+                        if (model.GetDeclaredSymbol(variable, ct) is { } variableSymbol)
                         {
                             idToSymbol[id] = variableSymbol;
                             symbolToId[variableSymbol] = id;
