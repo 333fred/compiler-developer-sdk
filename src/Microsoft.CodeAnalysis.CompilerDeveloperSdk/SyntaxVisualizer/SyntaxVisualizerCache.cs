@@ -16,7 +16,7 @@ sealed class SyntaxVisualizerCache : AbstractCompilerDeveloperSdkLspService
         return _cache.TryGetValue(document, out entry);
     }
 
-    public void SetCachedEntry(Document document, DocumentSyntaxInformation entry)
+    private void SetCachedEntry(Document document, DocumentSyntaxInformation entry)
     {
         _cache.Add(document, entry);
     }

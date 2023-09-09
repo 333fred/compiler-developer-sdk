@@ -53,8 +53,12 @@ sealed class SyntaxTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentR
 
         return request.ParentNodeId switch
         {
-            null => new SyntaxTreeResponse { Nodes = ImmutableArray.Create(SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], text!, nodeId: 0)) },
-            int parentId when cacheEntry.NodeMap.TryGetValue(parentId, out var parentItem) => new SyntaxTreeResponse { Nodes = parentItem.GetChildren().Select(s => SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(s, text!, cacheEntry.IdMap[s])).ToImmutableArray() },
+            null => new SyntaxTreeResponse { Nodes = ImmutableArray.Create(SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], text, nodeId: 0)) },
+            int parentId when cacheEntry.NodeMap.TryGetValue(parentId, out var parentItem) =>
+                new SyntaxTreeResponse
+                {
+                    Nodes = parentItem.GetChildren().Select(s => SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(s, text, cacheEntry.IdMap[s])).ToImmutableArray()
+                },
             _ => new SyntaxTreeResponse { Nodes = ImmutableArray<SyntaxTreeNode>.Empty }
         };
     }
