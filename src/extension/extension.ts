@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { CSharpExtension } from './csharpExtensionExports';
 import { createSyntaxVisualizerProvider } from './syntaxVisualizerProvider';
 import { createLogger } from './logger';
+import { createOperationVisualizerProvider } from './operationVisualizerProvider';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -25,8 +26,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     logger.log("C# extension initialization complete. Activating SyntaxVisualizer.");
 
-    const disposables = createSyntaxVisualizerProvider(csharpExtension, logger);
-    context.subscriptions.push(...disposables);
+    context.subscriptions.push(...[
+        ...createSyntaxVisualizerProvider(csharpExtension, logger),
+        ...createOperationVisualizerProvider(csharpExtension, logger)]);
 }
 
 // This method is called when your extension is deactivated

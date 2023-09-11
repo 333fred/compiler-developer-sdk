@@ -25,8 +25,8 @@ sealed class IOperationTreeResponse
     public required ImmutableArray<IOperationTreeNode> Nodes { get; init; }
 }
 
-[ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxTreeService)), Shared]
-[CompilerDeveloperSdkMethod(Endpoints.SyntaxTree)]
+[ExportCompilerDeveloperSdkStatelessLspService(typeof(IOperationTreeService)), Shared]
+[CompilerDeveloperSdkMethod(Endpoints.IOperationTree)]
 sealed class IOperationTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IOperationTreeRequest, IOperationTreeResponse>
 {
     [ImportingConstructor]
@@ -47,14 +47,18 @@ sealed class IOperationTreeService : AbstractCompilerDeveloperSdkLspServiceDocum
         var document = context.GetRequiredDocument();
 
         var cacheEntry = await cache.GetOrAddCachedEntry(document, cancellationToken);
+        var text = await document.GetTextAsync(cancellationToken);
 
         return request.ParentSymbolId switch
         {
-            null => new SyntaxTreeResponse { Nodes = ImmutableArray.Create(IOperationTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], cacheEntry.IdMap[0])) },
+            null or -1 => new IOperationTreeResponse
+            {
+                Nodes = ImmutableArray.Create(cacheEntry.IdToSymbol[0].ToTreeNode(text))
+            },
             int parentId when cacheEntry.IdToSymbol.TryGetValue(parentId, out var parentItem) =>
-                new SyntaxTreeResponse
+                new IOperationTreeResponse
                 {
-                    Nodes = parentItem.GetChildren().Select(s => IOperationTreeNode.NodeOrTokenOrTriviaToTreeItem(s, cacheEntry.IdMap[s])).ToImmutableArray()
+                    Nodes = parentItem.ChildIds.Select(i => cacheEntry.IdToSymbol[i].ToTreeNode(text)).ToImmutableArray()
                 },
             _ => throw new ArgumentException("Invalid parent symbol id", nameof(request))
         };

@@ -1,11 +1,15 @@
+using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CompilerDeveloperSdk;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
+using Microsoft.CodeAnalysis.Text;
 
 sealed class IOperationVisualizerCache : AbstractCompilerDeveloperSdkLspService
 {
@@ -33,20 +37,17 @@ sealed class IOperationVisualizerCache : AbstractCompilerDeveloperSdkLspService
     }
 }
 
-// TODO: This won't work if there are mutliple partial parts in one file. Need to map from node to syntax+symbol to handle this
-sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, ISymbol> IdToSymbol, IReadOnlyDictionary<ISymbol, int> SymbolToId)
+sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSymbol> IdToSymbol)
 {
     public static async Task<DocumentIOperationInformation> CreateFromDocument(Document document, CancellationToken ct)
     {
-        var (idToSymbol, symbolToId) = await BuildIdMap(document, ct);
-        return new DocumentIOperationInformation(idToSymbol, symbolToId);
+        var idToSymbol = await BuildIdMap(document, ct);
+        return new DocumentIOperationInformation(idToSymbol);
 
-        static async Task<(Dictionary<int, ISymbol> idToSymbol, Dictionary<ISymbol, int> symbolToId)> BuildIdMap(Document document, CancellationToken ct)
+        static async Task<Dictionary<int, SyntaxAndSymbol>> BuildIdMap(Document document, CancellationToken ct)
         {
             // First time we've seen this file. Build the map
-            int id = 0;
-            var idToSymbol = new Dictionary<int, ISymbol>();
-            var symbolToId = new Dictionary<ISymbol, int>(SymbolEqualityComparer.Default);
+            var idToSymbol = new Dictionary<int, SyntaxAndSymbol>();
 
             var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
             var model = await document.GetSemanticModelAsync(ct).ConfigureAwait(false);
@@ -54,30 +55,84 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, ISymbol> Id
             Debug.Assert(root != null);
             Debug.Assert(model != null);
 
-            foreach (var decl in root.DescendantNodes().OfType<MemberDeclarationSyntax>())
+            idToSymbol.Add(0, new(root, Symbol: null, ParentId: -1, SymbolId: 0, ChildIds: ImmutableArray<int>.Empty));
+
+            var walker = new SyntaxWalker(model, idToSymbol);
+            walker.StartVisit(root);
+
+            return idToSymbol;
+        }
+    }
+
+    private sealed class SyntaxWalker(SemanticModel semanticModel, Dictionary<int, SyntaxAndSymbol> idToSymbol) : CSharpSyntaxWalker
+    {
+        private int _nextId = 1;
+        private int _parentId = 0;
+
+        public void StartVisit(SyntaxNode node)
+        {
+            Debug.Assert(node is CompilationUnitSyntax);
+
+            if (semanticModel.GetDeclaredSymbol(node) is { } tlsSymbol)
             {
-                if (model.GetDeclaredSymbol(decl, ct) is { } symbol)
-                {
-                    idToSymbol[id] = symbol;
-                    symbolToId[symbol] = id;
-                    id++;
-                }
-                else if (root is FieldDeclarationSyntax { Declaration.Variables: { } variables })
-                {
-                    foreach (var variable in variables)
-                    {
-                        if (model.GetDeclaredSymbol(variable, ct) is { } variableSymbol)
-                        {
-                            idToSymbol[id] = variableSymbol;
-                            symbolToId[variableSymbol] = id;
-                            id++;
-                        }
-                    }
-                }
+                StoreInfo(tlsSymbol, node);
+                _parentId = 0;
             }
 
-            return (idToSymbol, symbolToId);
+            Visit(node);
         }
+
+        public override void Visit(SyntaxNode? node)
+        {
+            int previousParentId = _parentId;
+            if (node is MemberDeclarationSyntax memberDeclaration and not GlobalStatementSyntax && semanticModel.GetDeclaredSymbol(memberDeclaration) is { } declaredSymbol)
+            {
+                StoreInfo(declaredSymbol, node);
+            }
+
+            base.Visit(node);
+            _parentId = previousParentId;
+        }
+
+        public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
+        {
+            int previousParentId = _parentId;
+            if (node is { Parent.Parent: FieldDeclarationSyntax fieldDeclaration } && semanticModel.GetDeclaredSymbol(node) is { } declaredSymbol)
+            {
+                StoreInfo(declaredSymbol, node);
+            }
+
+            base.VisitVariableDeclarator(node);
+
+            _parentId = previousParentId;
+        }
+
+        public override void VisitGlobalStatement(GlobalStatementSyntax node)
+        {
+            // We don't visit inside top level statements
+            return;
+        }
+
+        private void StoreInfo(ISymbol symbol, SyntaxNode syntaxNode)
+        {
+            var symbolId = _nextId++;
+            var syntaxAndSymbol = new SyntaxAndSymbol(syntaxNode, symbol, _parentId, symbolId, ImmutableArray<int>.Empty);
+
+            idToSymbol[symbolId] = syntaxAndSymbol;
+            var parent = idToSymbol[_parentId];
+            idToSymbol[_parentId] = parent with { ChildIds = parent.ChildIds.Add(symbolId) };
+
+            _parentId = symbolId;
+        }
+    }
+}
+
+record struct SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
+{
+    public IOperationTreeNode ToTreeNode(SourceText text)
+    {
+        var location = text.Lines.GetLinePositionSpan(Syntax.Span);
+        return IOperationTreeNode.SymbolToTreeItem(Symbol, location, SymbolId, ChildIds);
     }
 }
 
