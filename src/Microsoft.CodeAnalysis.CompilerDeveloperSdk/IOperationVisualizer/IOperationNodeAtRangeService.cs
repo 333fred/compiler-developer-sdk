@@ -32,8 +32,6 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
         var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         Debug.Assert(root != null);
 
-        // Find the nearest token or node to the given position. Don't include trivia, it's likely not what
-        // the user wanted.
         var span = ProtocolConversions.RangeToTextSpan(request.Range, text);
         var element = root.FindNode(span);
 

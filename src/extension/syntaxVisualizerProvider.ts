@@ -3,7 +3,7 @@ import { CSharpExtension } from "./csharpExtensionExports";
 import * as lsp from 'vscode-languageserver-protocol';
 import assert = require('node:assert');
 import { Logger } from './logger';
-import { SymbolAndKind, getSymbolKindIcon } from './common';
+import { NodeAtRangeRequest, NodeAtRangeResponse, NodeParentResponse, SymbolAndKind, getSymbolKindIcon } from './common';
 
 export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
     const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension, logger);
@@ -330,15 +330,11 @@ interface SyntaxTreeResponse {
     nodes: SyntaxTreeNode[];
 }
 
-const syntaxNodeParentRequest = new lsp.RequestType<SyntaxNodeParentRequest, SyntaxNodeParentResponse, void>('syntaxTree/parentNode', lsp.ParameterStructures.auto);
+const syntaxNodeParentRequest = new lsp.RequestType<SyntaxNodeParentRequest, NodeParentResponse<SyntaxTreeNode>, void>('syntaxTree/parentNode', lsp.ParameterStructures.auto);
 
 interface SyntaxNodeParentRequest {
     textDocument: lsp.TextDocumentIdentifier;
     childId: number;
-}
-
-interface SyntaxNodeParentResponse {
-    parent?: SyntaxTreeNode;
 }
 
 const syntaxNodeInfoRequest = new lsp.RequestType<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse, void>('syntaxTree/info', lsp.ParameterStructures.auto);
@@ -370,16 +366,7 @@ interface NodeTypeInfo {
     conversion?: string;
 }
 
-const syntaxNodeAtRangeRequest = new lsp.RequestType<SyntaxNodeAtRangeRequest, SyntaxNodeAtRangeResponse, void>('syntaxTree/nodeAtRange', lsp.ParameterStructures.auto);
-
-interface SyntaxNodeAtRangeRequest {
-    textDocument: lsp.TextDocumentIdentifier;
-    range: lsp.Range;
-}
-
-interface SyntaxNodeAtRangeResponse {
-    node?: SyntaxTreeNode;
-}
+const syntaxNodeAtRangeRequest = new lsp.RequestType<NodeAtRangeRequest, NodeAtRangeResponse<SyntaxTreeNode>, void>('syntaxTree/nodeAtRange', lsp.ParameterStructures.auto);
 
 interface SyntaxTreeNodeAndFile {
     node: SyntaxTreeNode;

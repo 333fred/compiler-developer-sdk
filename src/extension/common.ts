@@ -1,8 +1,22 @@
 import * as vscode from 'vscode';
+import * as lsp from 'vscode-languageserver-protocol';
 
 export interface SymbolAndKind {
     symbol: string;
     symbolKind: string;
+}
+
+export interface NodeAtRangeRequest {
+    textDocument: lsp.TextDocumentIdentifier;
+    range: lsp.Range;
+}
+
+export interface NodeAtRangeResponse<T> {
+    node?: T;
+}
+
+export interface NodeParentResponse<T> {
+    parent?: T;
 }
 
 const classIcon = new vscode.ThemeIcon('symbol-class');

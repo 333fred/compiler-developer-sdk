@@ -3,7 +3,7 @@ import { CSharpExtension } from "./csharpExtensionExports";
 import * as lsp from 'vscode-languageserver-protocol';
 import assert = require('node:assert');
 import { Logger } from './logger';
-import { SymbolAndKind, getSymbolKindIcon } from './common';
+import { NodeAtRangeRequest, NodeAtRangeResponse, NodeParentResponse, SymbolAndKind, getSymbolKindIcon } from './common';
 
 export function createOperationVisualizerProvider(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
     const syntaxTreeProvider = new OperationTreeProvider(csharpExtension, logger);
@@ -13,27 +13,27 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
 
     logger.log("IOperationVisualizer views registered");
 
-    // const editorTextSelectionChangeDisposable = vscode.window.onDidChangeTextEditorSelection(async event => {
-    //     if (treeView.visible && event.selections.length > 0 && event.textEditor.document.languageId === "csharp") {
-    //         const firstSelection = event.selections[0];
-    //         const range: lsp.Range = lsp.Range.create(
-    //             lsp.Position.create(firstSelection.start.line, firstSelection.start.character),
-    //             lsp.Position.create(firstSelection.end.line, firstSelection.end.character));
-    //         const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.fileName);
-    //         const response = await csharpExtension.experimental.sendServerRequest(syntaxNodeAtRangeRequest, { textDocument, range }, lsp.CancellationToken.None);
+    const editorTextSelectionChangeDisposable = vscode.window.onDidChangeTextEditorSelection(async event => {
+        if (treeView.visible && event.selections.length > 0 && event.textEditor.document.languageId === "csharp") {
+            const firstSelection = event.selections[0];
+            const range: lsp.Range = lsp.Range.create(
+                lsp.Position.create(firstSelection.start.line, firstSelection.start.character),
+                lsp.Position.create(firstSelection.end.line, firstSelection.end.character));
+            const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.fileName);
+            const response = await csharpExtension.experimental.sendServerRequest(operationNodeAtRangeRequest, { textDocument, range }, lsp.CancellationToken.None);
 
-    //         if (!response || !response.node) {
-    //             return;
-    //         }
+            if (!response || !response.node) {
+                return;
+            }
 
-    //         await treeView.reveal({ node: response.node, identifier: textDocument });
-    //         const responseRange = response.node.range;
-    //         const highlightRange = new vscode.Range(
-    //             new vscode.Position(responseRange.start.line, responseRange.start.character),
-    //             new vscode.Position(responseRange.end.line, responseRange.end.character));
-    //         await vscode.commands.executeCommand(highlightEditorRangeCommand, highlightRange);
-    //     }
-    // });
+            await treeView.reveal({ node: response.node, identifier: textDocument });
+            const responseRange = response.node.range;
+            const highlightRange = new vscode.Range(
+                new vscode.Position(responseRange.start.line, responseRange.start.character),
+                new vscode.Position(responseRange.end.line, responseRange.end.character));
+            await vscode.commands.executeCommand(highlightEditorRangeCommand, highlightRange);
+        }
+    });
 
     // const treeViewVisibilityDisposable = treeView.onDidChangeVisibility(async (event) => {
     //     if (!event.visible) {
@@ -59,7 +59,7 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
     //     }
     // });
 
-    return [treeView, /*propertyViewDisposable, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable/*, treeViewSelectionChangedDisposable*/];
+    return [treeView, editorTextSelectionChangeDisposable, /*propertyViewDisposable, treeViewVisibilityDisposable, treeViewSelectionChangedDisposable*/];
 }
 
 const highlightEditorRangeCommand: string = 'csharp.operationTreeVisualizer.highlightRange';
@@ -138,14 +138,18 @@ class OperationTreeProvider implements vscode.TreeDataProvider<IOperationTreeNod
         return children.nodes.map(node => { return { node, identifier }; });
     }
 
-    // async getParent(element: IOperationTreeNodeAndFile): Promise<IOperationTreeNodeAndFile | undefined> {
-    //     const response = await this.server.experimental.sendServerRequest(syntaxNodeParentRequest, { textDocument: element.identifier, childId: element.node.nodeId }, lsp.CancellationToken.None);
-    //     if (!response || !response.parent) {
-    //         return undefined;
-    //     }
+    async getParent(element: IOperationTreeNodeAndFile): Promise<IOperationTreeNodeAndFile | undefined> {
+        const response = await this.server.experimental.sendServerRequest(ioperationNodeParentRequest, {
+            textDocument: element.identifier,
+            childSymbolId: element.node.symbolId,
+            childIOperationId: element.node.ioperationId
+        }, lsp.CancellationToken.None);
+        if (!response || !response.parent) {
+            return undefined;
+        }
 
-    //     return { identifier: element.identifier, node: response.parent };
-    // }
+        return { identifier: element.identifier, node: response.parent };
+    }
 
     private _highlightRange(range: lsp.Range) {
         const vscodeRange = new vscode.Range(
@@ -330,16 +334,13 @@ interface IOperationTreeResponse {
     nodes: IOperationTreeNode[];
 }
 
-// const syntaxNodeParentRequest = new lsp.RequestType<SyntaxNodeParentRequest, SyntaxNodeParentResponse, void>('syntaxTree/parentNode', lsp.ParameterStructures.auto);
+const ioperationNodeParentRequest = new lsp.RequestType<IOperationNodeParentRequest, NodeParentResponse<IOperationTreeNode>, void>('operationTree/parentNode', lsp.ParameterStructures.auto);
 
-// interface SyntaxNodeParentRequest {
-//     textDocument: lsp.TextDocumentIdentifier;
-//     childId: number;
-// }
-
-// interface SyntaxNodeParentResponse {
-//     parent?: SyntaxTreeNode;
-// }
+interface IOperationNodeParentRequest {
+    textDocument: lsp.TextDocumentIdentifier;
+    childSymbolId: number;
+    childIOperationId?: number;
+}
 
 // const syntaxNodeInfoRequest = new lsp.RequestType<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse, void>('syntaxTree/info', lsp.ParameterStructures.auto);
 
@@ -370,16 +371,7 @@ interface IOperationTreeResponse {
 //     conversion?: string;
 // }
 
-// const syntaxNodeAtRangeRequest = new lsp.RequestType<SyntaxNodeAtRangeRequest, SyntaxNodeAtRangeResponse, void>('syntaxTree/nodeAtRange', lsp.ParameterStructures.auto);
-
-// interface SyntaxNodeAtRangeRequest {
-//     textDocument: lsp.TextDocumentIdentifier;
-//     range: lsp.Range;
-// }
-
-// interface SyntaxNodeAtRangeResponse {
-//     node?: SyntaxTreeNode;
-// }
+const operationNodeAtRangeRequest = new lsp.RequestType<NodeAtRangeRequest, NodeAtRangeResponse<IOperationTreeNode>, void>('operationTree/nodeAtRange', lsp.ParameterStructures.auto);
 
 interface IOperationTreeNodeAndFile {
     node: IOperationTreeNode;

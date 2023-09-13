@@ -87,7 +87,8 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         public override void Visit(SyntaxNode? node)
         {
             int previousParentId = _parentId;
-            if (node is MemberDeclarationSyntax memberDeclaration and not GlobalStatementSyntax && semanticModel.GetDeclaredSymbol(memberDeclaration) is { } declaredSymbol)
+            if (node is MemberDeclarationSyntax memberDeclaration and not GlobalStatementSyntax
+                && semanticModel.GetDeclaredSymbol(memberDeclaration) is { } declaredSymbol)
             {
                 StoreInfo(declaredSymbol, node);
             }
@@ -123,7 +124,16 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
             idToSymbol[symbolId] = syntaxAndSymbol;
             var parent = idToSymbol[_parentId];
             idToSymbol[_parentId] = parent with { ChildIds = parent.ChildIds.Add(symbolId) };
-            syntaxToId.Add(syntaxNode, symbolId);
+            if (syntaxNode is CompilationUnitSyntax && symbol is IMethodSymbol { Name: WellKnownMemberNames.TopLevelStatementsEntryPointMethodName })
+            {
+                // Replace the root node with the entry point method symbol in the syntax map. We assume that if a user clicks in a top level statement,
+                // they'd rather tree reveal that, not the root node.
+                syntaxToId[syntaxNode] = symbolId;
+            }
+            else
+            {
+                syntaxToId.Add(syntaxNode, symbolId);
+            }
 
             _parentId = symbolId;
         }
