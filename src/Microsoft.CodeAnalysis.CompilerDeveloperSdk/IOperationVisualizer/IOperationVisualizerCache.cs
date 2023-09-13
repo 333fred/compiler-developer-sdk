@@ -37,17 +37,18 @@ sealed class IOperationVisualizerCache : AbstractCompilerDeveloperSdkLspService
     }
 }
 
-sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSymbol> IdToSymbol)
+sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSymbol> IdToSymbol, IReadOnlyDictionary<SyntaxNode, int> SyntaxNodeToId)
 {
     public static async Task<DocumentIOperationInformation> CreateFromDocument(Document document, CancellationToken ct)
     {
-        var idToSymbol = await BuildIdMap(document, ct);
-        return new DocumentIOperationInformation(idToSymbol);
+        var (idToSymbol, syntaxToId) = await BuildIdMap(document, ct);
+        return new DocumentIOperationInformation(idToSymbol, syntaxToId);
 
-        static async Task<Dictionary<int, SyntaxAndSymbol>> BuildIdMap(Document document, CancellationToken ct)
+        static async Task<(Dictionary<int, SyntaxAndSymbol>, Dictionary<SyntaxNode, int>)> BuildIdMap(Document document, CancellationToken ct)
         {
             // First time we've seen this file. Build the map
             var idToSymbol = new Dictionary<int, SyntaxAndSymbol>();
+            var syntaxToId = new Dictionary<SyntaxNode, int>();
 
             var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
             var model = await document.GetSemanticModelAsync(ct).ConfigureAwait(false);
@@ -55,16 +56,14 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
             Debug.Assert(root != null);
             Debug.Assert(model != null);
 
-            idToSymbol.Add(0, new(root, Symbol: null, ParentId: -1, SymbolId: 0, ChildIds: ImmutableArray<int>.Empty));
-
-            var walker = new SyntaxWalker(model, idToSymbol);
+            var walker = new SyntaxWalker(model, idToSymbol, syntaxToId);
             walker.StartVisit(root);
 
-            return idToSymbol;
+            return (idToSymbol, syntaxToId);
         }
     }
 
-    private sealed class SyntaxWalker(SemanticModel semanticModel, Dictionary<int, SyntaxAndSymbol> idToSymbol) : CSharpSyntaxWalker
+    private sealed class SyntaxWalker(SemanticModel semanticModel, Dictionary<int, SyntaxAndSymbol> idToSymbol, Dictionary<SyntaxNode, int> syntaxToId) : CSharpSyntaxWalker
     {
         private int _nextId = 1;
         private int _parentId = 0;
@@ -72,6 +71,9 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         public void StartVisit(SyntaxNode node)
         {
             Debug.Assert(node is CompilationUnitSyntax);
+
+            idToSymbol.Add(0, new(node, Symbol: null, ParentId: -1, SymbolId: 0, ChildIds: ImmutableArray<int>.Empty));
+            syntaxToId.Add(node, 0);
 
             if (semanticModel.GetDeclaredSymbol(node) is { } tlsSymbol)
             {
@@ -121,6 +123,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
             idToSymbol[symbolId] = syntaxAndSymbol;
             var parent = idToSymbol[_parentId];
             idToSymbol[_parentId] = parent with { ChildIds = parent.ChildIds.Add(symbolId) };
+            syntaxToId.Add(syntaxNode, symbolId);
 
             _parentId = symbolId;
         }

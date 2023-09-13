@@ -8,4 +8,6 @@ static class Endpoints
     public const string SyntaxTreeNodeInfo = "syntaxTree/info";
 
     public const string IOperationTree = "operationTree";
+    public const string IOperationNodeAtRange = "operationTree/nodeAtRange";
+    public const string IOperationNodeParent = "operationTree/parentNode";
 }

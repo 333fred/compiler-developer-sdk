@@ -1,34 +1,16 @@
 using System.Composition;
 using System.Diagnostics;
-using System.Runtime.Serialization;
 
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
-using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
+using SyntaxNodeAtRangeResponse = Microsoft.CodeAnalysis.CompilerDeveloperSdk.NodeAtRangeResponse<Microsoft.CodeAnalysis.CompilerDeveloperSdk.SyntaxTreeNode>;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
-[DataContract]
-sealed class SyntaxNodeAtRangeRequest
-{
-    [DataMember(Name = "textDocument")]
-    public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "range")]
-    public required LSP.Range Range { get; init; }
-}
-
-[DataContract]
-sealed class SyntaxNodeAtRangeResponse
-{
-    [DataMember(Name = "node")]
-    public required SyntaxTreeNode? Node { get; init; }
-}
-
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeAtRangeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxNodeAtRange)]
-sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeAtRangeRequest, SyntaxNodeAtRangeResponse>
+sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<NodeAtRangeRequest, SyntaxNodeAtRangeResponse>
 {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
@@ -40,9 +22,9 @@ sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDo
 
     public override bool RequiresLSPSolution => true;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeAtRangeRequest request) => request.TextDocument;
+    public override TextDocumentIdentifier GetTextDocumentIdentifier(NodeAtRangeRequest request) => request.TextDocument;
 
-    public override async Task<SyntaxNodeAtRangeResponse> HandleRequestAsync(SyntaxNodeAtRangeRequest request, RequestContext context, CancellationToken cancellationToken)
+    public override async Task<SyntaxNodeAtRangeResponse> HandleRequestAsync(NodeAtRangeRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<SyntaxVisualizerCache>();
         var document = context.GetRequiredDocument();
@@ -56,6 +38,6 @@ sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDo
         var span = ProtocolConversions.RangeToTextSpan(request.Range, text);
         SyntaxNodeOrToken element = span.Length == 0 ? root.FindToken(span.Start) : root.FindNode(span);
 
-        return new SyntaxNodeAtRangeResponse { Node = SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(element, text!, cacheEntry.IdMap[element]) };
+        return new() { Node = SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(element, text!, cacheEntry.IdMap[element]) };
     }
 }
