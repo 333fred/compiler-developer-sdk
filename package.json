@@ -42,11 +42,6 @@
                     "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
                 },
                 {
-                    "id": "syntaxProperties",
-                    "name": "Syntax Node Properties",
-                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
-                },
-                {
                     "id": "operationTree",
                     "name": "IOperation Tree",
                     "type": "tree",

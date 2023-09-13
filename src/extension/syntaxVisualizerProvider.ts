@@ -8,8 +8,6 @@ import { NodeAtRangeRequest, NodeAtRangeResponse, NodeParentResponse, SymbolAndK
 export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
     const syntaxTreeProvider = new SyntaxTreeProvider(csharpExtension, logger);
     const treeView = vscode.window.createTreeView('syntaxTree', { treeDataProvider: syntaxTreeProvider });
-    const propertyTreeProvider = new SyntaxNodePropertyTreeProvider();
-    const propertyViewDisposable = vscode.window.registerTreeDataProvider('syntaxProperties', propertyTreeProvider);
 
     logger.log("SyntaxVisualizer views registered");
 
@@ -26,7 +24,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
                 return;
             }
 
-            await treeView.reveal({ node: response.node, identifier: textDocument });
+            await treeView.reveal({ kind: 'SyntaxTreeNodeAndFile', node: response.node, identifier: textDocument });
             const responseRange = response.node.range;
             const highlightRange = new vscode.Range(
                 new vscode.Position(responseRange.start.line, responseRange.start.character),
@@ -37,41 +35,23 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
 
     const treeViewVisibilityDisposable = treeView.onDidChangeVisibility(async (event) => {
         if (!event.visible) {
-            propertyTreeProvider.setSyntaxNodeInfo(undefined);
             await vscode.commands.executeCommand(clearHighlightCommand);
         }
     });
 
-    const treeViewSelectionChangedDisposable = treeView.onDidChangeSelection(async (event) => {
-        if (event.selection && event.selection.length > 0) {
-            const activeNode = event.selection[0];
-            try {
-                const info = await csharpExtension.experimental.sendServerRequest(syntaxNodeInfoRequest, { textDocument: activeNode.identifier, node: activeNode.node }, lsp.CancellationToken.None);
-                propertyTreeProvider.setSyntaxNodeInfo(info);
-            }
-            catch (e) {
-                console.log(`Error getting syntax node info: ${e}`);
-                propertyTreeProvider.setSyntaxNodeInfo(undefined);
-            }
-        }
-        else {
-            propertyTreeProvider.setSyntaxNodeInfo(undefined);
-        }
-    });
-
-    return [treeView, propertyViewDisposable, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable, treeViewSelectionChangedDisposable];
+    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable];
 }
 
 const highlightEditorRangeCommand: string = 'csharp.syntaxTreeVisualizer.highlightRange';
 const clearHighlightCommand: string = 'csharp.syntaxTreeVisualizer.clearHighlight';
 
-class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFile>, vscode.Disposable {
+class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Disposable {
 
     private readonly _wordHighlightBackground: vscode.ThemeColor;
     private readonly _wordHighlightBorder: vscode.ThemeColor;
     private readonly _decorationType: vscode.TextEditorDecorationType;
     private readonly _disposables: vscode.Disposable[];
-    private readonly _onDidChangeTreeData: vscode.EventEmitter<SyntaxTreeNodeAndFile | undefined> = new vscode.EventEmitter<SyntaxTreeNodeAndFile | undefined>();
+    private readonly _onDidChangeTreeData: vscode.EventEmitter<TreeNode | undefined> = new vscode.EventEmitter<TreeNode | undefined>();
 
     constructor(private server: CSharpExtension, private logger: Logger) {
 
@@ -88,7 +68,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
             if (event.document.languageId === "csharp") {
                 this.logger.logDebug("Text document changed");
                 this._onDidChangeTreeData.fire(undefined);
-                
+
             }
         });
 
@@ -98,45 +78,165 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
         this._disposables = [activeEditorDisposable, textDocumentChangedDisposable, highlightRangeCommandDisposable, clearHighlightCommandDisposable, this._onDidChangeTreeData];
     }
 
-    readonly onDidChangeTreeData: vscode.Event<SyntaxTreeNodeAndFile | undefined> = this._onDidChangeTreeData.event;
+    readonly onDidChangeTreeData: vscode.Event<TreeNode | undefined> = this._onDidChangeTreeData.event;
 
-    getTreeItem(element: SyntaxTreeNodeAndFile): vscode.TreeItem {
-        const node = element.node;
-        let treeItem = new vscode.TreeItem(`${node.nodeType.symbol}`, node.hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-        treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
-        treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
-        treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
-        treeItem.id = `${node.nodeId}`;
+    getTreeItem(element: TreeNode): vscode.TreeItem {
+        let treeItem: vscode.TreeItem;
+        switch (element.kind) {
+            case 'SyntaxTreeNodeAndFile':
+                const node = element.node;
+                treeItem = new vscode.TreeItem(`${node.nodeType.symbol}`, node.hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+                treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
+                treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
+                treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
+                treeItem.id = `${node.nodeId}`;
 
-        return treeItem;
+                return treeItem;
+
+            case 'PropertiesRoot':
+                return new vscode.TreeItem('Properties', vscode.TreeItemCollapsibleState.Collapsed);
+
+            case 'SyntaxNodeProperty':
+                const collapsibleState = element.hasChildren
+                    ? (element.category === SyntaxNodePropertyCategory.propertiesHeader ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded)
+                    : vscode.TreeItemCollapsibleState.None;
+
+                treeItem = new vscode.TreeItem(element.title, collapsibleState);
+                treeItem.iconPath = element.icon;
+                treeItem.description = element.description;
+
+                return treeItem;
+        }
     }
 
-    async getChildren(element?: SyntaxTreeNodeAndFile): Promise<SyntaxTreeNodeAndFile[]> {
-        let identifier: lsp.TextDocumentIdentifier;
-        if (!element) {
-            const activeDoc = vscode.window.activeTextEditor?.document.uri.fsPath;
+    async getChildren(element?: TreeNode): Promise<TreeNode[]> {
+        if (!element || element.kind === 'SyntaxTreeNodeAndFile') {
+            let identifier: lsp.TextDocumentIdentifier;
+            if (!element) {
+                const activeDoc = vscode.window.activeTextEditor?.document.uri.fsPath;
 
-            if (!activeDoc || !activeDoc.endsWith(".cs")) {
-                // Not a C# file, don't display anything
+                if (!activeDoc || !activeDoc.endsWith(".cs")) {
+                    // Not a C# file, don't display anything
+                    return [];
+                }
+
+                identifier = lsp.TextDocumentIdentifier.create(activeDoc);
+            }
+            else {
+                identifier = element.identifier;
+            }
+
+            const children = await this.server.experimental.sendServerRequest(
+                syntaxTree,
+                { textDocument: identifier, parentNodeId: element?.node.nodeId },
+                lsp.CancellationToken.None);
+
+            var propertiesNodeIfRequired: TreeNode[] = element ? [{ kind: 'PropertiesRoot', node: element.node, identifier }] : [];
+
+            if (!children || !Array.isArray(children.nodes)) {
+                return propertiesNodeIfRequired;
+            }
+
+            return propertiesNodeIfRequired.concat(children.nodes.map(node => { return { kind: 'SyntaxTreeNodeAndFile', node, identifier }; }));
+        }
+        else if (element.kind == 'PropertiesRoot') {
+            let info: SyntaxNodeInfoResponse;
+            try {
+                info = await this.server.experimental.sendServerRequest(syntaxNodeInfoRequest, { textDocument: element.identifier, node: element.node }, lsp.CancellationToken.None);
+            }
+            catch (e) {
+                console.log(`Error getting syntax node info: ${e}`);
                 return [];
             }
 
-            identifier = lsp.TextDocumentIdentifier.create(activeDoc);
+            let categories: SyntaxNodeProperty[] = [
+                leafNode('Node Type:', info, info.nodeType.symbol, info.nodeType.symbolKind),
+                leafNode('SyntaxKind:', info, info.nodeSyntaxKind, "EnumMember"),
+            ];
+
+            if (info.semanticClassification) {
+                categories.push(leafNode('Semantic Classification', info, info.semanticClassification));
+            }
+
+            if (info.nodeTypeInfo) {
+                categories.push({ kind: 'SyntaxNodeProperty', category: SyntaxNodePropertyCategory.typeInfoHeader, title: 'Type Info', hasChildren: true, info });
+            }
+            else {
+                categories.push({ kind: 'SyntaxNodeProperty', category: SyntaxNodePropertyCategory.typeInfoHeader, title: 'Type Info:', description: '<null>', hasChildren: false, info });
+            }
+
+            if (info.nodeSymbolInfo) {
+                categories.push({ kind: 'SyntaxNodeProperty', category: SyntaxNodePropertyCategory.symbolInfoHeader, title: 'Symbol Info', hasChildren: true, info });
+            }
+            else {
+                categories.push({ kind: 'SyntaxNodeProperty', category: SyntaxNodePropertyCategory.symbolInfoHeader, title: 'Symbol Info:', description: '<null>', hasChildren: false, info });
+            }
+
+            categories.push({
+                kind: 'SyntaxNodeProperty',
+                category: SyntaxNodePropertyCategory.declaredSymbolHeader,
+                title: 'Declared Symbol:',
+                description: info.nodeDeclaredSymbol.symbol,
+                icon: info.nodeDeclaredSymbol.symbolKind
+                    ? getSymbolKindIcon(info.nodeDeclaredSymbol.symbolKind)
+                    : undefined,
+                hasChildren: false,
+                info
+            });
+
+            categories.push({
+                kind: 'SyntaxNodeProperty',
+                category: SyntaxNodePropertyCategory.propertiesHeader,
+                title: 'Properties',
+                hasChildren: Object.keys(info.properties).length !== 0,
+                info
+            });
+
+            return categories;
         }
         else {
-            identifier = element.identifier;
+            switch (element.category) {
+                case SyntaxNodePropertyCategory.declaredSymbolHeader:
+                case SyntaxNodePropertyCategory.leafNode:
+                    return [];
+
+                case SyntaxNodePropertyCategory.typeInfoHeader:
+                    assert(element.info.nodeTypeInfo);
+                    return [
+                        leafNode('Type:', element.info, element.info.nodeTypeInfo.type.symbol, element.info.nodeTypeInfo.type.symbolKind),
+                        leafNode('ConvertedType:', element.info, element.info.nodeTypeInfo.convertedType.symbol, element.info.nodeTypeInfo.convertedType.symbolKind),
+                        leafNode('Conversion:', element.info, element.info.nodeTypeInfo.conversion)
+                    ];
+
+                case SyntaxNodePropertyCategory.symbolInfoHeader:
+                    assert(element.info.nodeSymbolInfo);
+                    let symbolInfoNodes = [
+                        leafNode('Symbol:', element.info, element.info.nodeSymbolInfo.symbol.symbol, element.info.nodeSymbolInfo.symbol.symbolKind),
+                        leafNode('Candidate Reason:', element.info, element.info.nodeSymbolInfo.candidateReason)
+                    ];
+
+                    if (element.info.nodeSymbolInfo.candidateSymbols.length > 0) {
+                        symbolInfoNodes.push({ kind: 'SyntaxNodeProperty', category: SyntaxNodePropertyCategory.candidateSymbolsHeader, title: 'Candidate Symbols', hasChildren: true, info: element.info });
+                    }
+                    else {
+                        symbolInfoNodes.push(leafNode('Candidate Symbols', element.info, 'None'));
+                    }
+
+                    return symbolInfoNodes;
+
+                case SyntaxNodePropertyCategory.candidateSymbolsHeader:
+                    assert(element.info.nodeSymbolInfo!.candidateSymbols.length > 0);
+                    return element.info.nodeSymbolInfo!.candidateSymbols.map(s => leafNode(s.symbol, element.info, undefined, s.symbolKind));
+
+                case SyntaxNodePropertyCategory.propertiesHeader:
+                    let properties: SyntaxNodeProperty[] = [];
+                    for (const [key, value] of Object.entries(element.info.properties).sort((a, b) => a[0].localeCompare(b[0]))) {
+                        properties.push(leafNode(key, element.info, value));
+                    }
+
+                    return properties;
+            }
         }
-
-        const children = await this.server.experimental.sendServerRequest(
-            syntaxTree,
-            { textDocument: identifier, parentNodeId: element?.node.nodeId },
-            lsp.CancellationToken.None);
-
-        if (!children || !Array.isArray(children.nodes)) {
-            return [];
-        }
-
-        return children.nodes.map(node => { return { node, identifier }; });
     }
 
     async getParent(element: SyntaxTreeNodeAndFile): Promise<SyntaxTreeNodeAndFile | undefined> {
@@ -145,7 +245,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxTreeNodeAndFil
             return undefined;
         }
 
-        return { identifier: element.identifier, node: response.parent };
+        return { kind: 'SyntaxTreeNodeAndFile', identifier: element.identifier, node: response.parent };
     }
 
     private _highlightRange(range: lsp.Range) {
@@ -188,134 +288,24 @@ enum SyntaxNodePropertyCategory {
 }
 
 interface SyntaxNodeProperty {
+    kind: "SyntaxNodeProperty";
     category: SyntaxNodePropertyCategory;
     title: string;
     hasChildren: boolean;
     icon?: vscode.ThemeIcon;
     description?: string;
+    info: SyntaxNodeInfoResponse
 }
 
-class SyntaxNodePropertyTreeProvider implements vscode.TreeDataProvider<SyntaxNodeProperty> {
-    private _syntaxNodeInfo?: SyntaxNodeInfoResponse;
-    private _onDidChangeTreeData: vscode.EventEmitter<SyntaxNodeProperty | undefined> = new vscode.EventEmitter<SyntaxNodeProperty | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<SyntaxNodeProperty | undefined> = this._onDidChangeTreeData.event;
-
-    public setSyntaxNodeInfo(newInfo?: SyntaxNodeInfoResponse) {
-        this._syntaxNodeInfo = newInfo;
-        this._onDidChangeTreeData.fire(undefined);
-    }
-
-    getChildren(element?: SyntaxNodeProperty): SyntaxNodeProperty[] | undefined {
-        if (!this._syntaxNodeInfo) {
-            return undefined;
-        }
-
-        if (!element) {
-            let categories: SyntaxNodeProperty[] = [
-                leafNode('Node Type:', this._syntaxNodeInfo.nodeType.symbol, this._syntaxNodeInfo.nodeType.symbolKind),
-                leafNode('SyntaxKind:', this._syntaxNodeInfo.nodeSyntaxKind, "EnumMember"),
-            ];
-
-            if (this._syntaxNodeInfo.semanticClassification) {
-                categories.push(leafNode('Semantic Classification', this._syntaxNodeInfo.semanticClassification));
-            }
-
-            if (this._syntaxNodeInfo.nodeTypeInfo) {
-                categories.push({ category: SyntaxNodePropertyCategory.typeInfoHeader, title: 'Type Info', hasChildren: true });
-            }
-            else {
-                categories.push({ category: SyntaxNodePropertyCategory.typeInfoHeader, title: 'Type Info:', description: '<null>', hasChildren: false });
-            }
-
-            if (this._syntaxNodeInfo.nodeSymbolInfo) {
-                categories.push({ category: SyntaxNodePropertyCategory.symbolInfoHeader, title: 'Symbol Info', hasChildren: true });
-            }
-            else {
-                categories.push({ category: SyntaxNodePropertyCategory.symbolInfoHeader, title: 'Symbol Info:', description: '<null>', hasChildren: false });
-            }
-
-            categories.push({
-                category: SyntaxNodePropertyCategory.declaredSymbolHeader,
-                title: 'Declared Symbol:',
-                description: this._syntaxNodeInfo.nodeDeclaredSymbol.symbol,
-                icon: this._syntaxNodeInfo.nodeDeclaredSymbol.symbolKind
-                    ? getSymbolKindIcon(this._syntaxNodeInfo.nodeDeclaredSymbol.symbolKind)
-                    : undefined,
-                hasChildren: false
-            });
-
-            categories.push({
-                category: SyntaxNodePropertyCategory.propertiesHeader,
-                title: 'Properties',
-                hasChildren: Object.keys(this._syntaxNodeInfo.properties).length !== 0
-            });
-
-            return categories;
-        }
-
-        switch (element.category) {
-            case SyntaxNodePropertyCategory.declaredSymbolHeader:
-            case SyntaxNodePropertyCategory.leafNode:
-                return undefined;
-
-            case SyntaxNodePropertyCategory.typeInfoHeader:
-                assert(this._syntaxNodeInfo.nodeTypeInfo);
-                return [
-                    leafNode('Type:', this._syntaxNodeInfo.nodeTypeInfo.type.symbol, this._syntaxNodeInfo.nodeTypeInfo.type.symbolKind),
-                    leafNode('ConvertedType:', this._syntaxNodeInfo.nodeTypeInfo.convertedType.symbol, this._syntaxNodeInfo.nodeTypeInfo.convertedType.symbolKind),
-                    leafNode('Conversion:', this._syntaxNodeInfo.nodeTypeInfo.conversion)
-                ];
-
-            case SyntaxNodePropertyCategory.symbolInfoHeader:
-                assert(this._syntaxNodeInfo.nodeSymbolInfo);
-                let symbolInfoNodes = [
-                    leafNode('Symbol:', this._syntaxNodeInfo.nodeSymbolInfo.symbol.symbol, this._syntaxNodeInfo.nodeSymbolInfo.symbol.symbolKind),
-                    leafNode('Candidate Reason:', this._syntaxNodeInfo.nodeSymbolInfo.candidateReason)
-                ];
-
-                if (this._syntaxNodeInfo.nodeSymbolInfo.candidateSymbols.length > 0) {
-                    symbolInfoNodes.push({ category: SyntaxNodePropertyCategory.candidateSymbolsHeader, title: 'Candidate Symbols', hasChildren: true });
-                }
-                else {
-                    symbolInfoNodes.push(leafNode('Candidate Symbols', 'None'));
-                }
-
-                return symbolInfoNodes;
-
-            case SyntaxNodePropertyCategory.candidateSymbolsHeader:
-                assert(this._syntaxNodeInfo.nodeSymbolInfo!.candidateSymbols.length > 0);
-                return this._syntaxNodeInfo.nodeSymbolInfo!.candidateSymbols.map(s => leafNode(s.symbol, undefined, s.symbolKind));
-
-            case SyntaxNodePropertyCategory.propertiesHeader:
-                let properties: SyntaxNodeProperty[] = [];
-                for (const [key, value] of Object.entries(this._syntaxNodeInfo.properties).sort((a, b) => a[0].localeCompare(b[0]))) {
-                    properties.push(leafNode(key, value));
-                }
-
-                return properties;
-        }
-    }
-
-    getTreeItem(property: SyntaxNodeProperty): vscode.TreeItem {
-        const collapsibleState = property.hasChildren
-            ? (property.category === SyntaxNodePropertyCategory.propertiesHeader ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded)
-            : vscode.TreeItemCollapsibleState.None;
-
-        let treeItem = new vscode.TreeItem(property.title, collapsibleState);
-        treeItem.iconPath = property.icon;
-        treeItem.description = property.description;
-
-        return treeItem;
-    }
-}
-
-function leafNode(title: string, description?: string, symbolKind?: string): SyntaxNodeProperty {
+function leafNode(title: string, info: SyntaxNodeInfoResponse, description?: string, symbolKind?: string): SyntaxNodeProperty {
     return {
+        kind: "SyntaxNodeProperty",
         category: SyntaxNodePropertyCategory.leafNode,
         hasChildren: false,
         title,
         description,
-        icon: symbolKind ? getSymbolKindIcon(symbolKind) : undefined
+        icon: symbolKind ? getSymbolKindIcon(symbolKind) : undefined,
+        info
     };
 }
 
@@ -368,7 +358,19 @@ interface NodeTypeInfo {
 
 const syntaxNodeAtRangeRequest = new lsp.RequestType<NodeAtRangeRequest, NodeAtRangeResponse<SyntaxTreeNode>, void>('syntaxTree/nodeAtRange', lsp.ParameterStructures.auto);
 
+type TreeNode =
+    SyntaxTreeNodeAndFile
+    | PropertiesRoot
+    | SyntaxNodeProperty;
+
 interface SyntaxTreeNodeAndFile {
+    kind: "SyntaxTreeNodeAndFile";
+    node: SyntaxTreeNode;
+    identifier: lsp.TextDocumentIdentifier;
+}
+
+interface PropertiesRoot {
+    kind: "PropertiesRoot";
     node: SyntaxTreeNode;
     identifier: lsp.TextDocumentIdentifier;
 }
