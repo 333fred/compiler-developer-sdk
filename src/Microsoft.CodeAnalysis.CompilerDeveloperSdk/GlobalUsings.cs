@@ -1,0 +1,2 @@
+global using SyntaxVisualizerCache = Microsoft.CodeAnalysis.CompilerDeveloperSdk.VisualizerCache<Microsoft.CodeAnalysis.CompilerDeveloperSdk.DocumentSyntaxInformation>;
+global using IOperationVisualizerCache = Microsoft.CodeAnalysis.CompilerDeveloperSdk.VisualizerCache<Microsoft.CodeAnalysis.CompilerDeveloperSdk.DocumentIOperationInformation>;

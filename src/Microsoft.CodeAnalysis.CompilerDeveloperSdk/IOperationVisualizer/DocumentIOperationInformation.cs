@@ -1,43 +1,15 @@
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
 using Microsoft.CodeAnalysis.Text;
 
-sealed class IOperationVisualizerCache : AbstractCompilerDeveloperSdkLspService
-{
-    private readonly ConditionalWeakTable<Document, DocumentIOperationInformation> _cache = new();
+namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
-    public bool TryGetCachedEntry(Document document, [NotNullWhen(true)] out DocumentIOperationInformation? entry)
-    {
-        return _cache.TryGetValue(document, out entry);
-    }
-
-    private void SetCachedEntry(Document document, DocumentIOperationInformation entry)
-    {
-        _cache.Add(document, entry);
-    }
-
-    public async Task<DocumentIOperationInformation> GetOrAddCachedEntry(Document document, CancellationToken cancellationToken)
-    {
-        if (!TryGetCachedEntry(document, out var entry))
-        {
-            entry = await DocumentIOperationInformation.CreateFromDocument(document, cancellationToken).ConfigureAwait(false);
-            SetCachedEntry(document, entry);
-        }
-
-        return entry;
-    }
-}
-
-sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSymbol> IdToSymbol, IReadOnlyDictionary<SyntaxNode, int> SyntaxNodeToId)
+sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSymbol> IdToSymbol, IReadOnlyDictionary<SyntaxNode, int> SyntaxNodeToId) : ICacheEntry<DocumentIOperationInformation>
 {
     public static async Task<DocumentIOperationInformation> CreateFromDocument(Document document, CancellationToken ct)
     {
@@ -205,15 +177,11 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
     }
 }
 
-[ExportCompilerDeveloperSdkLspServiceFactory(typeof(IOperationVisualizerCache))]
-[Shared]
-sealed class IOperationVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory
-{
+[ExportCompilerDeveloperSdkLspServiceFactory(typeof(IOperationVisualizerCache)), Shared]
+sealed class IOperationVisualizerCacheFactory : VisualizerCacheFactory<DocumentSyntaxInformation> {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
     public IOperationVisualizerCacheFactory()
     {
     }
-
-    public override IOperationVisualizerCache CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new();
 }

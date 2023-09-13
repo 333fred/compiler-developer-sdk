@@ -1,53 +1,25 @@
 ﻿using System.Composition;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
-sealed class SyntaxVisualizerCache : AbstractCompilerDeveloperSdkLspService
+sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTokenOrTrivia> NodeMap, IReadOnlyDictionary<SyntaxNodeOrTokenOrTrivia, int> IdMap) : ICacheEntry<DocumentSyntaxInformation>
 {
-    private readonly ConditionalWeakTable<Document, DocumentSyntaxInformation> _cache = new();
-
-    public bool TryGetCachedEntry(Document document, [NotNullWhen(true)] out DocumentSyntaxInformation? entry)
+    public static async Task<DocumentSyntaxInformation> CreateFromDocument(Document document, CancellationToken ct)
     {
-        return _cache.TryGetValue(document, out entry);
-    }
-
-    private void SetCachedEntry(Document document, DocumentSyntaxInformation entry)
-    {
-        _cache.Add(document, entry);
-    }
-
-    public async Task<DocumentSyntaxInformation> GetOrAddCachedEntry(Document document, CancellationToken cancellationToken)
-    {
-        if (!TryGetCachedEntry(document, out var entry))
-        {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            Debug.Assert(syntaxNode != null);
-            entry = DocumentSyntaxInformation.CreateFromDocument(syntaxNode);
-            SetCachedEntry(document, entry);
-        }
-
-        return entry;
-    }
-}
-
-sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTokenOrTrivia> NodeMap, IReadOnlyDictionary<SyntaxNodeOrTokenOrTrivia, int> IdMap)
-{
-    public static DocumentSyntaxInformation CreateFromDocument(SyntaxNode syntaxNode)
-    {
-        BuildIdMap(syntaxNode, out var nodeMap, out var idMap);
+        var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
+        Debug.Assert(root != null);
+        BuildIdMap(root, out var nodeMap, out var idMap);
         return new DocumentSyntaxInformation(nodeMap, idMap);
 
         static void BuildIdMap(SyntaxNode syntaxNode, out Dictionary<int, SyntaxNodeOrTokenOrTrivia> nodeMap, out Dictionary<SyntaxNodeOrTokenOrTrivia, int> idMap)
         {
             // First time we've seen this file. Build the map
             int id = 0;
-            nodeMap = new Dictionary<int, SyntaxNodeOrTokenOrTrivia>();
-            idMap = new Dictionary<SyntaxNodeOrTokenOrTrivia, int>();
+            nodeMap = [];
+            idMap = [];
             foreach (var nodeOrToken in syntaxNode.DescendantNodesAndTokensAndSelf())
             {
                 nodeMap[id] = nodeOrToken;
@@ -84,13 +56,10 @@ sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTok
 }
 
 [ExportCompilerDeveloperSdkLspServiceFactory(typeof(SyntaxVisualizerCache)), Shared]
-sealed class SyntaxVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory
-{
+sealed class SyntaxVisualizerCacheFactory : VisualizerCacheFactory<DocumentSyntaxInformation> {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
     public SyntaxVisualizerCacheFactory()
     {
     }
-
-    public override SyntaxVisualizerCache CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new();
 }
