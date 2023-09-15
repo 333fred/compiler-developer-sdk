@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -59,7 +60,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         public override void Visit(SyntaxNode? node)
         {
             int previousParentId = _parentId;
-            if (node is MemberDeclarationSyntax memberDeclaration and not GlobalStatementSyntax
+            if (node is MemberDeclarationSyntax memberDeclaration and not (GlobalStatementSyntax or PropertyDeclarationSyntax)
                 && semanticModel.GetDeclaredSymbol(memberDeclaration) is { } declaredSymbol)
             {
                 StoreInfo(declaredSymbol, node);
@@ -86,6 +87,49 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         {
             // We don't visit inside top level statements
             return;
+        }
+
+        public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        {
+            int previousParentId = _parentId;
+            var propertySymbol = (IPropertySymbol?)semanticModel.GetDeclaredSymbol(node);
+
+            if (propertySymbol is null)
+            {
+                Debug.Fail("How?");
+                return;
+            }
+
+            StoreInfo(propertySymbol, node);
+
+            if (node.ExpressionBody is { } expressionBody)
+            {
+                Debug.Assert(propertySymbol.GetMethod is not null);
+                StoreInfo(propertySymbol.GetMethod, expressionBody);
+            }
+
+            if (node.AccessorList is { } accessorList)
+            {
+                var propertyId = _parentId;
+                foreach (var accessor in accessorList.Accessors)
+                {
+                    if (accessor.Keyword.IsKind(SyntaxKind.GetKeyword))
+                    {
+                        Debug.Assert(propertySymbol.GetMethod is not null);
+                        StoreInfo(propertySymbol.GetMethod, accessor);
+                    }
+                    else
+                    {
+                        Debug.Assert(accessor.Keyword.Kind() is SyntaxKind.SetKeyword or SyntaxKind.InitKeyword);
+                        Debug.Assert(propertySymbol.SetMethod is not null);
+                        StoreInfo(propertySymbol.SetMethod, accessor);
+                    }
+
+                    _parentId = propertyId;
+                }
+            }
+
+            _parentId = previousParentId;
         }
 
         private void StoreInfo(ISymbol symbol, SyntaxNode syntaxNode)
@@ -177,11 +221,15 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
     }
 }
 
+sealed class IOperationVisualizerCache : VisualizerCache<DocumentIOperationInformation>;
+
 [ExportCompilerDeveloperSdkLspServiceFactory(typeof(IOperationVisualizerCache)), Shared]
-sealed class IOperationVisualizerCacheFactory : VisualizerCacheFactory<DocumentSyntaxInformation> {
+sealed class IOperationVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
     public IOperationVisualizerCacheFactory()
     {
     }
+
+    public override AbstractCompilerDeveloperSdkLspService CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new IOperationVisualizerCache();
 }

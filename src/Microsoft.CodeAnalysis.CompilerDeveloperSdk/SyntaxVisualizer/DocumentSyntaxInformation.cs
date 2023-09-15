@@ -55,11 +55,15 @@ sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTok
     }
 }
 
+sealed class SyntaxVisualizerCache : VisualizerCache<DocumentSyntaxInformation>;
+
 [ExportCompilerDeveloperSdkLspServiceFactory(typeof(SyntaxVisualizerCache)), Shared]
-sealed class SyntaxVisualizerCacheFactory : VisualizerCacheFactory<DocumentSyntaxInformation> {
+sealed class SyntaxVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
     public SyntaxVisualizerCacheFactory()
     {
     }
+
+    public override AbstractCompilerDeveloperSdkLspService CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new SyntaxVisualizerCache();
 }

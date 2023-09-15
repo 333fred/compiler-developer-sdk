@@ -1,4 +1,3 @@
-using System.Composition;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -11,7 +10,7 @@ interface ICacheEntry<TSelf> where TSelf : ICacheEntry<TSelf>
     static abstract Task<TSelf> CreateFromDocument(Document document, CancellationToken ct);
 }
 
-sealed class VisualizerCache<TCacheEntry> : AbstractCompilerDeveloperSdkLspService where TCacheEntry : class, ICacheEntry<TCacheEntry>
+abstract class VisualizerCache<TCacheEntry> : AbstractCompilerDeveloperSdkLspService where TCacheEntry : class, ICacheEntry<TCacheEntry>
 {
     private readonly ConditionalWeakTable<Document, TCacheEntry> _cache = new();
 
@@ -27,9 +26,4 @@ sealed class VisualizerCache<TCacheEntry> : AbstractCompilerDeveloperSdkLspServi
 
         return entry;
     }
-}
-
-abstract class VisualizerCacheFactory<TCacheEntry> : AbstractCompilerDeveloperSdkLspServiceFactory where TCacheEntry : class, ICacheEntry<TCacheEntry>
-{
-    public override VisualizerCache<TCacheEntry> CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new();
 }
