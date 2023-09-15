@@ -5,11 +5,10 @@ import assert = require('node:assert');
 import { Logger } from './logger';
 import { NodeAtRangeRequest, NodeAtRangeResponse, NodeParentResponse, SymbolAndKind, getSymbolKindIcon } from './common';
 
+
 export function createOperationVisualizerProvider(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
     const operationTreeProvider = new OperationTreeProvider(csharpExtension, logger);
     const treeView = vscode.window.createTreeView('operationTree', { treeDataProvider: operationTreeProvider });
-    // const propertyTreeProvider = new SyntaxNodePropertyTreeProvider();
-    // const propertyViewDisposable = vscode.window.registerTreeDataProvider('syntaxProperties', propertyTreeProvider);
 
     logger.log("IOperationVisualizer views registered");
 
@@ -28,11 +27,13 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
 
             operationTreeProvider.editorChangeCausedDataChange = true;
             await treeView.reveal({ kind: 'symbol', node: response.node, identifier: textDocument });
-            const responseRange = response.node.range;
-            const highlightRange = new vscode.Range(
-                new vscode.Position(responseRange.start.line, responseRange.start.character),
-                new vscode.Position(responseRange.end.line, responseRange.end.character));
-            await vscode.commands.executeCommand(highlightEditorRangeCommand, highlightRange);
+            if (operationTreeProvider.highlightEnabled) {
+                const responseRange = response.node.range;
+                const highlightRange = new vscode.Range(
+                    new vscode.Position(responseRange.start.line, responseRange.start.character),
+                    new vscode.Position(responseRange.end.line, responseRange.end.character));
+                await vscode.commands.executeCommand(highlightEditorRangeCommand, highlightRange);
+            }
         }
     });
 
@@ -42,28 +43,12 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
         }
     });
 
-    // const treeViewSelectionChangedDisposable = treeView.onDidChangeSelection(async (event) => {
-    //     if (event.selection && event.selection.length > 0) {
-    //         const activeNode = event.selection[0];
-    //         try {
-    //             const info = await csharpExtension.experimental.sendServerRequest(syntaxNodeInfoRequest, { textDocument: activeNode.identifier, node: activeNode.node }, lsp.CancellationToken.None);
-    //             propertyTreeProvider.setSyntaxNodeInfo(info);
-    //         }
-    //         catch (e) {
-    //             console.log(`Error getting syntax node info: ${e}`);
-    //             propertyTreeProvider.setSyntaxNodeInfo(undefined);
-    //         }
-    //     }
-    //     else {
-    //         propertyTreeProvider.setSyntaxNodeInfo(undefined);
-    //     }
-    // });
-
     return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable, /*treeViewSelectionChangedDisposable*/];
 }
 
-const highlightEditorRangeCommand: string = 'csharp.operationTreeVisualizer.highlightRange';
-const clearHighlightCommand: string = 'csharp.operationTreeVisualizer.clearHighlight';
+const highlightEditorRangeCommand = 'csharp.operationTreeVisualizer.highlightRange';
+const clearHighlightCommand = 'csharp.operationTreeVisualizer.clearHighlight';
+const highlightOnClickCommand = 'compilerDeveloperSdk.highlightOnClickIOperation';
 
 class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Disposable {
 
@@ -73,6 +58,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
     private readonly _disposables: vscode.Disposable[];
     private readonly _onDidChangeTreeData: vscode.EventEmitter<TreeNode | undefined> = new vscode.EventEmitter<TreeNode | undefined>();
     public editorChangeCausedDataChange: boolean = false;
+    public highlightEnabled: boolean = false;
 
     constructor(private server: CSharpExtension, private logger: Logger) {
 
@@ -95,8 +81,14 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
 
         const highlightRangeCommandDisposable = vscode.commands.registerCommand(highlightEditorRangeCommand, (node) => this._highlightRange(node), this);
         const clearHighlightCommandDisposable = vscode.commands.registerCommand(clearHighlightCommand, () => this._clearHighlight(), this);
+        const highlightOnClickDisposable = vscode.commands.registerCommand(highlightOnClickCommand, () => {
+            this.highlightEnabled = !this.highlightEnabled;
+            if (!this.highlightEnabled) {
+                this._clearHighlight();
+            }
+        });
 
-        this._disposables = [activeEditorDisposable, textDocumentChangedDisposable, highlightRangeCommandDisposable, clearHighlightCommandDisposable, this._onDidChangeTreeData];
+        this._disposables = [activeEditorDisposable, textDocumentChangedDisposable, highlightRangeCommandDisposable, clearHighlightCommandDisposable, highlightOnClickDisposable, this._onDidChangeTreeData];
     }
 
     readonly onDidChangeTreeData: vscode.Event<TreeNode | undefined> = this._onDidChangeTreeData.event;

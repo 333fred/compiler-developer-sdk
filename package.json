@@ -59,6 +59,32 @@
                 "contents": "No C# file opened."
             }
         ],
+        "commands": [
+            {
+                "command": "compilerDeveloperSdk.highlightOnClickSyntax",
+                "title": "Highlight file location on clicking syntax tree nodes",
+                "icon": "$(arrow-swap)"
+            },
+            {
+                "command": "compilerDeveloperSdk.highlightOnClickIOperation",
+                "title": "Highlight file location on clicking IOperation tree nodes",
+                "icon": "$(arrow-swap)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "compilerDeveloperSdk.highlightOnClickSyntax",
+                    "when": "view == syntaxTree",
+                    "group": "navigation"
+                },
+                {
+                    "command": "compilerDeveloperSdk.highlightOnClickIOperation",
+                    "when": "view == operationTree",
+                    "group": "navigation"
+                }
+            ]
+        },
         "configuration": {
             "title": ".NET Compiler Developer SDK",
             "properties": {

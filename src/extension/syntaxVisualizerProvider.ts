@@ -26,11 +26,13 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
 
             syntaxTreeProvider.editorChangeCausedDataChange = true;
             await treeView.reveal({ kind: 'SyntaxTreeNodeAndFile', node: response.node, identifier: textDocument });
-            const responseRange = response.node.range;
-            const highlightRange = new vscode.Range(
-                new vscode.Position(responseRange.start.line, responseRange.start.character),
-                new vscode.Position(responseRange.end.line, responseRange.end.character));
-            await vscode.commands.executeCommand(highlightEditorRangeCommand, highlightRange);
+            if (syntaxTreeProvider.highlightEnabled) {
+                const responseRange = response.node.range;
+                const highlightRange = new vscode.Range(
+                    new vscode.Position(responseRange.start.line, responseRange.start.character),
+                    new vscode.Position(responseRange.end.line, responseRange.end.character));
+                await vscode.commands.executeCommand(highlightEditorRangeCommand, highlightRange);
+            }
         }
     });
 
@@ -45,6 +47,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
 
 const highlightEditorRangeCommand: string = 'csharp.syntaxTreeVisualizer.highlightRange';
 const clearHighlightCommand: string = 'csharp.syntaxTreeVisualizer.clearHighlight';
+const highlightOnClickCommand = 'compilerDeveloperSdk.highlightOnClickSyntax';
 
 class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Disposable {
 
@@ -54,6 +57,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
     private readonly _disposables: vscode.Disposable[];
     private readonly _onDidChangeTreeData: vscode.EventEmitter<TreeNode | undefined> = new vscode.EventEmitter<TreeNode | undefined>();
     public editorChangeCausedDataChange: boolean = false;
+    public highlightEnabled: boolean = true;
 
     constructor(private server: CSharpExtension, private logger: Logger) {
 
@@ -76,8 +80,14 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
 
         const highlightRangeCommandDisposable = vscode.commands.registerCommand(highlightEditorRangeCommand, (node) => this._highlightRange(node), this);
         const clearHighlightCommandDisposable = vscode.commands.registerCommand(clearHighlightCommand, () => this._clearHighlight(), this);
+        const highlightOnClickDisposable = vscode.commands.registerCommand(highlightOnClickCommand, () => {
+            this.highlightEnabled = !this.highlightEnabled;
+            if (!this.highlightEnabled) {
+                this._clearHighlight();
+            }
+        });
 
-        this._disposables = [activeEditorDisposable, textDocumentChangedDisposable, highlightRangeCommandDisposable, clearHighlightCommandDisposable, this._onDidChangeTreeData];
+        this._disposables = [activeEditorDisposable, textDocumentChangedDisposable, highlightRangeCommandDisposable, clearHighlightCommandDisposable, highlightOnClickDisposable, this._onDidChangeTreeData];
     }
 
     readonly onDidChangeTreeData: vscode.Event<TreeNode | undefined> = this._onDidChangeTreeData.event;
