@@ -6,8 +6,8 @@ import { Logger } from './logger';
 import { NodeAtRangeRequest, NodeAtRangeResponse, NodeParentResponse, SymbolAndKind, getSymbolKindIcon } from './common';
 
 export function createOperationVisualizerProvider(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
-    const syntaxTreeProvider = new OperationTreeProvider(csharpExtension, logger);
-    const treeView = vscode.window.createTreeView('operationTree', { treeDataProvider: syntaxTreeProvider });
+    const operationTreeProvider = new OperationTreeProvider(csharpExtension, logger);
+    const treeView = vscode.window.createTreeView('operationTree', { treeDataProvider: operationTreeProvider });
     // const propertyTreeProvider = new SyntaxNodePropertyTreeProvider();
     // const propertyViewDisposable = vscode.window.registerTreeDataProvider('syntaxProperties', propertyTreeProvider);
 
@@ -26,6 +26,7 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
                 return;
             }
 
+            operationTreeProvider.editorChangeCausedDataChange = true;
             await treeView.reveal({ kind: 'symbol', node: response.node, identifier: textDocument });
             const responseRange = response.node.range;
             const highlightRange = new vscode.Range(
@@ -71,6 +72,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
     private readonly _decorationType: vscode.TextEditorDecorationType;
     private readonly _disposables: vscode.Disposable[];
     private readonly _onDidChangeTreeData: vscode.EventEmitter<TreeNode | undefined> = new vscode.EventEmitter<TreeNode | undefined>();
+    public editorChangeCausedDataChange: boolean = false;
 
     constructor(private server: CSharpExtension, private logger: Logger) {
 
@@ -86,6 +88,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         const textDocumentChangedDisposable = vscode.workspace.onDidChangeTextDocument(async event => {
             if (event.document.languageId === "csharp") {
                 this.logger.logDebug("Text document changed");
+                this.editorChangeCausedDataChange = true;
                 this._onDidChangeTreeData.fire(undefined);
             }
         });
@@ -115,7 +118,9 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
                 return new vscode.TreeItem("No IOperation children");
             }
 
-            return new vscode.TreeItem(`IOperation`, vscode.TreeItemCollapsibleState.Collapsed);
+            const item = new vscode.TreeItem(`IOperation Nodes`, vscode.TreeItemCollapsibleState.Collapsed);
+            item.iconPath = new vscode.ThemeIcon("code");
+            return item;
         }
     }
 
@@ -202,8 +207,14 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         }
 
         if (vscode.workspace.getConfiguration("compilerDeveloperSdk").get("syncCursorWithTree")) {
-            activeTextEditor.revealRange(vscodeRange);
-            activeTextEditor.selection = new vscode.Selection(vscodeRange.start, vscodeRange.start);
+            if (!this.editorChangeCausedDataChange) {
+                // Only do this if the editor change didn't cause the data change. Otherwise, we'll move the cursor as the user is typing,
+                // which is quite annoying.
+                activeTextEditor.revealRange(vscodeRange);
+            }
+            else {
+                this.editorChangeCausedDataChange = false;
+            }
         }
 
         activeTextEditor.setDecorations(this._decorationType, [vscodeRange]);

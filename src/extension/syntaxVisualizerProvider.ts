@@ -24,6 +24,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
                 return;
             }
 
+            syntaxTreeProvider.editorChangeCausedDataChange = true;
             await treeView.reveal({ kind: 'SyntaxTreeNodeAndFile', node: response.node, identifier: textDocument });
             const responseRange = response.node.range;
             const highlightRange = new vscode.Range(
@@ -52,6 +53,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
     private readonly _decorationType: vscode.TextEditorDecorationType;
     private readonly _disposables: vscode.Disposable[];
     private readonly _onDidChangeTreeData: vscode.EventEmitter<TreeNode | undefined> = new vscode.EventEmitter<TreeNode | undefined>();
+    public editorChangeCausedDataChange: boolean = false;
 
     constructor(private server: CSharpExtension, private logger: Logger) {
 
@@ -67,8 +69,8 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
         const textDocumentChangedDisposable = vscode.workspace.onDidChangeTextDocument(async event => {
             if (event.document.languageId === "csharp") {
                 this.logger.logDebug("Text document changed");
+                this.editorChangeCausedDataChange = true;
                 this._onDidChangeTreeData.fire(undefined);
-
             }
         });
 
@@ -259,8 +261,14 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
         }
 
         if (vscode.workspace.getConfiguration("compilerDeveloperSdk").get("syncCursorWithTree")) {
-            activeTextEditor.revealRange(vscodeRange);
-            activeTextEditor.selection = new vscode.Selection(vscodeRange.start, vscodeRange.start);
+            if (!this.editorChangeCausedDataChange) {
+                // Only do this if the editor change didn't cause the data change. Otherwise, we'll move the cursor as the user is typing,
+                // which is quite annoying.
+                activeTextEditor.revealRange(vscodeRange);
+            }
+            else {
+                this.editorChangeCausedDataChange = false;
+            }
         }
 
         activeTextEditor.setDecorations(this._decorationType, [vscodeRange]);
