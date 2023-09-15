@@ -176,7 +176,9 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
                VariableDeclaratorSyntax { Initializer: not null } => true,
                BaseMethodDeclarationSyntax { Body: not null } or BaseMethodDeclarationSyntax { ExpressionBody: not null } => true,
                MemberDeclarationSyntax { AttributeLists.Count: > 0 } => true,
-               // TODO: Properties should have getter/setter children in the tree, and have the iop children under each respective node
+               AccessorDeclarationSyntax accessor => accessor.Body is not null || accessor.ExpressionBody is not null,
+               ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax } => true,
+               // TODO: Attributes, particularly on properties
                _ => false
            };
 
@@ -189,7 +191,10 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
 
         var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
         Debug.Assert(model is not null);
-        var iopRoot = model.GetOperation(Syntax, cancellationToken);
+
+        var syntax = AdjustSyntaxNode(Syntax);
+
+        var iopRoot = model.GetOperation(syntax, cancellationToken);
 
         if (iopRoot is null)
         {
@@ -218,6 +223,14 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
         Interlocked.CompareExchange(ref _operationToId, new((operationToId, idToOperation)), null);
 
         return _operationToId.Value;
+
+        static SyntaxNode AdjustSyntaxNode(SyntaxNode syntaxNode)
+            => syntaxNode switch
+            {
+                AccessorDeclarationSyntax accessor => (SyntaxNode?)accessor.Body ?? accessor.ExpressionBody!,
+                ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax, Expression: var expression } => expression,
+                _ => syntaxNode
+            };
     }
 }
 
