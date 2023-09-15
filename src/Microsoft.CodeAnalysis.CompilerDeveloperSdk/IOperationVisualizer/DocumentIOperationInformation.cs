@@ -60,7 +60,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         public override void Visit(SyntaxNode? node)
         {
             int previousParentId = _parentId;
-            if (node is MemberDeclarationSyntax memberDeclaration and not (GlobalStatementSyntax or PropertyDeclarationSyntax)
+            if (node is MemberDeclarationSyntax memberDeclaration and not (GlobalStatementSyntax or BasePropertyDeclarationSyntax)
                 && semanticModel.GetDeclaredSymbol(memberDeclaration) is { } declaredSymbol)
             {
                 StoreInfo(declaredSymbol, node);
@@ -91,6 +91,16 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
 
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
+            HandleProperty(node);
+        }
+
+        public override void VisitIndexerDeclaration(IndexerDeclarationSyntax node)
+        {
+            HandleProperty(node);
+        }
+
+        private void HandleProperty(BasePropertyDeclarationSyntax node)
+        {
             int previousParentId = _parentId;
             var propertySymbol = (IPropertySymbol?)semanticModel.GetDeclaredSymbol(node);
 
@@ -102,7 +112,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
 
             StoreInfo(propertySymbol, node);
 
-            if (node.ExpressionBody is { } expressionBody)
+            if (node is PropertyDeclarationSyntax { ExpressionBody: { } expressionBody })
             {
                 Debug.Assert(propertySymbol.GetMethod is not null);
                 StoreInfo(propertySymbol.GetMethod, expressionBody);
