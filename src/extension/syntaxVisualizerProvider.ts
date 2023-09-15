@@ -101,7 +101,6 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
                 treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
                 treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
                 treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
-                treeItem.id = `${node.nodeId}`;
 
                 return treeItem;
 

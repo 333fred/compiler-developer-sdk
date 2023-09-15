@@ -104,7 +104,6 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
             treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
             treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
-            treeItem.id = `${node.symbolId}-${node.ioperationInfo?.ioperationId}`;
 
             return treeItem;
         }

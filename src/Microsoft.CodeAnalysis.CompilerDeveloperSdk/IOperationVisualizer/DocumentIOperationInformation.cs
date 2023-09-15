@@ -205,9 +205,10 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
 
 record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
 {
-    private static readonly StrongBox<(IReadOnlyDictionary<IOperation, int>, IReadOnlyDictionary<int, IOperation>)> s_empty = new((ImmutableDictionary<IOperation, int>.Empty, ImmutableDictionary<int, IOperation>.Empty));
+    private static readonly StrongBox<IOperationChildren> s_empty = new(new(ImmutableDictionary<IOperation, int>.Empty, ImmutableDictionary<int, IOperation>.Empty, ImmutableArray<int>.Empty));
+    private static readonly ImmutableArray<int> s_noAttributes = ImmutableArray.Create(0);
 
-    private StrongBox<(IReadOnlyDictionary<IOperation, int>, IReadOnlyDictionary<int, IOperation>)>? _operationToId = null;
+    private StrongBox<IOperationChildren>? _operationToId = null;
 
     public IOperationTreeNode ToTreeNode(SourceText text)
     {
@@ -229,7 +230,7 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
                _ => false
            };
 
-    public async ValueTask<(IReadOnlyDictionary<IOperation, int> IOperationToId, IReadOnlyDictionary<int, IOperation> IdToIOperation)> GetOrComputeIOperationChildrenAsync(Document document, CancellationToken cancellationToken)
+    public async ValueTask<IOperationChildren> GetOrComputeIOperationChildrenAsync(Document document, CancellationToken cancellationToken)
     {
         if (_operationToId != null)
         {
@@ -243,7 +244,15 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
 
         var iopRoot = model.GetOperation(syntax, cancellationToken);
 
-        if (iopRoot is null)
+        var attrLists = Syntax switch
+        {
+            MemberDeclarationSyntax { AttributeLists: { Count: > 0 } a } => a,
+            AccessorDeclarationSyntax { AttributeLists: { Count: > 0 } a } => a,
+            ArrowExpressionClauseSyntax => default, // Can't have an attribute on the arrow expression itself, it'll be on the property
+            _ => default,
+        };
+
+        if (iopRoot is null && attrLists.Count == 0)
         {
             // Don't care about multiple assignments here, it's always the same shared static empty value
             _operationToId = s_empty;
@@ -254,20 +263,40 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
         var idToOperation = new Dictionary<int, IOperation>();
         var stack = new Stack<IOperation>();
         var currentId = 0;
-        stack.Push(iopRoot);
 
-        while (stack.TryPop(out var current))
+        ImmutableArray<int> roots = default;
+        if (iopRoot is not null)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            operationToId.Add(current, currentId);
-            idToOperation.Add(currentId++, current);
-            foreach (var child in current.ChildOperations.Reverse())
-            {
-                stack.Push(child);
-            }
+            walkIOperationChildren(iopRoot);
+            roots = s_noAttributes;
+        }
+        else
+        {
+            roots = ImmutableArray<int>.Empty;
         }
 
-        Interlocked.CompareExchange(ref _operationToId, new((operationToId, idToOperation)), null);
+
+        if (attrLists.Count > 0)
+        {
+            var rootsBuilder = roots.ToBuilder();
+            foreach (var attrList in attrLists)
+            {
+                foreach (var attr in attrList.Attributes)
+                {
+                    var attrOperation = model.GetOperation(attr, cancellationToken);
+                    if (attrOperation is null)
+                    {
+                        continue;
+                    }
+
+                    rootsBuilder.Add(currentId);
+                    walkIOperationChildren(attrOperation);
+                }
+            }
+            roots = rootsBuilder.ToImmutable();
+        }
+
+        Interlocked.CompareExchange(ref _operationToId, new(new(operationToId, idToOperation, roots)), null);
 
         return _operationToId.Value;
 
@@ -278,13 +307,32 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
                 ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax, Expression: var expression } => expression,
                 _ => syntaxNode
             };
+
+        void walkIOperationChildren(IOperation root)
+        {
+            stack.Push(root);
+
+            while (stack.TryPop(out var current))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                operationToId.Add(current, currentId);
+                idToOperation.Add(currentId++, current);
+                foreach (var child in current.ChildOperations.Reverse())
+                {
+                    stack.Push(child);
+                }
+            }
+        }
     }
 }
+
+readonly record struct IOperationChildren(IReadOnlyDictionary<IOperation, int> IOperationToId, IReadOnlyDictionary<int, IOperation> IdToIOperation, ImmutableArray<int> Roots);
 
 sealed class IOperationVisualizerCache : VisualizerCache<DocumentIOperationInformation>;
 
 [ExportCompilerDeveloperSdkLspServiceFactory(typeof(IOperationVisualizerCache)), Shared]
-sealed class IOperationVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory {
+sealed class IOperationVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory
+{
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
     public IOperationVisualizerCacheFactory()

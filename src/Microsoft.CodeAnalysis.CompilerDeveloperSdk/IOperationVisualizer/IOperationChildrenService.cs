@@ -46,7 +46,7 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
 
         var parentSymbol = cacheEntry.IdToSymbol[request.ParentSymbolId];
 
-        var (operationToId, idToOperation) = await parentSymbol.GetOrComputeIOperationChildrenAsync(document, cancellationToken);
+        var (operationToId, idToOperation, roots) = await parentSymbol.GetOrComputeIOperationChildrenAsync(document, cancellationToken);
 
         if (operationToId == null)
         {
@@ -61,7 +61,7 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
             {
                 Debug.Assert(request.ParentIOperationPropertyName != null);
                 var operationChildren = IOperationNodeInformation.GetOperationChildrenForName(request.ParentIOperationPropertyName, parentOperation);
-                return new() { Nodes = operationChildren.Select(o => o.ToTreeNode(request.ParentSymbolId, operationToId[o], text)).ToImmutableArray() }; 
+                return new() { Nodes = operationChildren.Select(o => o.ToTreeNode(request.ParentSymbolId, operationToId[o], text)).ToImmutableArray() };
             }
             else
             {
@@ -70,7 +70,7 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
         }
         else
         {
-            return new() { Nodes = ImmutableArray.Create(idToOperation[0].ToTreeNode(request.ParentSymbolId, 0, text)) };
+            return new() { Nodes = roots.Select(r => idToOperation[r].ToTreeNode(request.ParentSymbolId, r, text)).ToImmutableArray() };
         }
 
     }
