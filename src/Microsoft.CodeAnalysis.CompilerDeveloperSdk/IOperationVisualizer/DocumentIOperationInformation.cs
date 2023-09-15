@@ -60,7 +60,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         public override void Visit(SyntaxNode? node)
         {
             int previousParentId = _parentId;
-            if (node is MemberDeclarationSyntax memberDeclaration and not (GlobalStatementSyntax or BasePropertyDeclarationSyntax)
+            if (node is MemberDeclarationSyntax memberDeclaration and not (GlobalStatementSyntax or BasePropertyDeclarationSyntax or EventDeclarationSyntax)
                 && semanticModel.GetDeclaredSymbol(memberDeclaration) is { } declaredSymbol)
             {
                 StoreInfo(declaredSymbol, node);
@@ -123,16 +123,53 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
                 var propertyId = _parentId;
                 foreach (var accessor in accessorList.Accessors)
                 {
-                    if (accessor.Keyword.IsKind(SyntaxKind.GetKeyword))
+                    if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration))
                     {
                         Debug.Assert(propertySymbol.GetMethod is not null);
                         StoreInfo(propertySymbol.GetMethod, accessor);
                     }
                     else
                     {
-                        Debug.Assert(accessor.Keyword.Kind() is SyntaxKind.SetKeyword or SyntaxKind.InitKeyword);
+                        Debug.Assert(accessor.Kind() is SyntaxKind.SetAccessorDeclaration or SyntaxKind.InitAccessorDeclaration);
                         Debug.Assert(propertySymbol.SetMethod is not null);
                         StoreInfo(propertySymbol.SetMethod, accessor);
+                    }
+
+                    _parentId = propertyId;
+                }
+            }
+
+            _parentId = previousParentId;
+        }
+
+        public override void VisitEventDeclaration(EventDeclarationSyntax node)
+        {
+            int previousParentId = _parentId;
+            var eventSymbol = (IEventSymbol?)semanticModel.GetDeclaredSymbol(node);
+
+            if (eventSymbol is null)
+            {
+                Debug.Fail("How?");
+                return;
+            }
+
+            StoreInfo(eventSymbol, node);
+
+            if (node.AccessorList is { } accessorList)
+            {
+                var propertyId = _parentId;
+                foreach (var accessor in accessorList.Accessors)
+                {
+                    if (accessor.IsKind(SyntaxKind.AddAccessorDeclaration))
+                    {
+                        Debug.Assert(eventSymbol.AddMethod is not null);
+                        StoreInfo(eventSymbol.AddMethod, accessor);
+                    }
+                    else
+                    {
+                        Debug.Assert(accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration));
+                        Debug.Assert(eventSymbol.RemoveMethod is not null);
+                        StoreInfo(eventSymbol.RemoveMethod, accessor);
                     }
 
                     _parentId = propertyId;
