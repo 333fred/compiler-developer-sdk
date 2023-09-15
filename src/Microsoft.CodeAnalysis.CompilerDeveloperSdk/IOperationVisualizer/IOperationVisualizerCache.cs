@@ -140,12 +140,68 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
     }
 }
 
-record struct SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
+record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
 {
+    private static readonly StrongBox<(IReadOnlyDictionary<IOperation, int>, IReadOnlyDictionary<int, IOperation>)> s_empty = new((ImmutableDictionary<IOperation, int>.Empty, ImmutableDictionary<int, IOperation>.Empty));
+
+    private StrongBox<(IReadOnlyDictionary<IOperation, int>, IReadOnlyDictionary<int, IOperation>)>? _operationToId = null;
+
     public IOperationTreeNode ToTreeNode(SourceText text)
     {
         var location = text.Lines.GetLinePositionSpan(Syntax.Span);
-        return IOperationTreeNode.SymbolToTreeItem(Symbol, location, SymbolId, ChildIds);
+        return IOperationTreeNode.SymbolToTreeItem(Symbol, HasIOperationChildren, location, SymbolId, ChildIds);
+    }
+
+    public bool HasIOperationChildren
+        => _operationToId != null
+           ? _operationToId == s_empty
+           : Syntax switch
+           {
+               VariableDeclaratorSyntax { Initializer: not null } => true,
+               BaseMethodDeclarationSyntax { Body: not null } or BaseMethodDeclarationSyntax { ExpressionBody: not null } => true,
+               MemberDeclarationSyntax { AttributeLists.Count: > 0 } => true,
+               // TODO: Properties should have getter/setter children in the tree, and have the iop children under each respective node
+               _ => false
+           };
+
+    public async ValueTask<(IReadOnlyDictionary<IOperation, int> IOperationToId, IReadOnlyDictionary<int, IOperation> IdToIOperation)> GetOrComputeIOperationChildrenAsync(Document document, CancellationToken cancellationToken)
+    {
+        if (_operationToId != null)
+        {
+            return _operationToId.Value;
+        }
+
+        var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        Debug.Assert(model is not null);
+        var iopRoot = model.GetOperation(Syntax, cancellationToken);
+
+        if (iopRoot is null)
+        {
+            // Don't care about multiple assignments here, it's always the same shared static empty value
+            _operationToId = s_empty;
+            return _operationToId.Value;
+        }
+
+        var operationToId = new Dictionary<IOperation, int>();
+        var idToOperation = new Dictionary<int, IOperation>();
+        var stack = new Stack<IOperation>();
+        var currentId = 0;
+        stack.Push(iopRoot);
+
+        while (stack.TryPop(out var current))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            operationToId.Add(current, currentId);
+            idToOperation.Add(currentId++, current);
+            foreach (var child in current.ChildOperations.Reverse())
+            {
+                stack.Push(child);
+            }
+        }
+
+        Interlocked.CompareExchange(ref _operationToId, new((operationToId, idToOperation)), null);
+
+        return _operationToId.Value;
     }
 }
 

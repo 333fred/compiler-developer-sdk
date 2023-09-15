@@ -45,7 +45,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
                 || (element is FieldDeclarationSyntax { Declaration.Variables: { } variables } && tryGetCacheEntry(variables[0], out entry)))
             {
                 // TODO: Now walk in to find the actual IOperation node in question, if it exists.
-                return new() { Node = entry.ToTreeNode(text) };
+                return new() { Node = entry?.ToTreeNode(text) };
             }
 
             element = element.Parent;
@@ -55,7 +55,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
         Debug.Fail($"Couldn't find a node for the given range {span}");
         return null;
 
-        bool tryGetCacheEntry(SyntaxNode syntaxNode, out SyntaxAndSymbol entry)
+        bool tryGetCacheEntry(SyntaxNode syntaxNode, out SyntaxAndSymbol? entry)
         {
             if (cacheEntry.SyntaxNodeToId.TryGetValue(syntaxNode, out var id))
             {
@@ -63,7 +63,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
                 return true;
             }
 
-            entry = default;
+            entry = null;
             return false;
         }
     }

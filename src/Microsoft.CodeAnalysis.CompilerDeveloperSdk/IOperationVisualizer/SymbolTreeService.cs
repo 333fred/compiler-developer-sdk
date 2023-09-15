@@ -8,14 +8,12 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
-sealed class IOperationTreeRequest : ITextDocumentParams
+sealed class SymbolTreeRequest : ITextDocumentParams
 {
     [DataMember(Name = "textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
     [DataMember(Name = "parentSymbolId")]
     public int? ParentSymbolId { get; init; }
-    [DataMember(Name = "parentIOperationId")]
-    public int? ParentIOperationId { get; init; }
 }
 
 [DataContract]
@@ -25,22 +23,22 @@ sealed class IOperationTreeResponse
     public required ImmutableArray<IOperationTreeNode> Nodes { get; init; }
 }
 
-[ExportCompilerDeveloperSdkStatelessLspService(typeof(IOperationTreeService)), Shared]
+[ExportCompilerDeveloperSdkStatelessLspService(typeof(SymbolTreeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.IOperationTree)]
-sealed class IOperationTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IOperationTreeRequest, IOperationTreeResponse>
+sealed class SymbolTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SymbolTreeRequest, IOperationTreeResponse>
 {
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public IOperationTreeService()
+    public SymbolTreeService()
     {
     }
 
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(IOperationTreeRequest request) => request.TextDocument;
+    public override TextDocumentIdentifier GetTextDocumentIdentifier(SymbolTreeRequest request) => request.TextDocument;
 
-    public override async Task<IOperationTreeResponse> HandleRequestAsync(IOperationTreeRequest request, RequestContext context, CancellationToken cancellationToken)
+    public override async Task<IOperationTreeResponse> HandleRequestAsync(SymbolTreeRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<IOperationVisualizerCache>();
 
