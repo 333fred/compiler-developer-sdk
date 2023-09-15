@@ -189,7 +189,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
             categories.push({
                 kind: 'SyntaxNodeProperty',
                 category: SyntaxNodePropertyCategory.propertiesHeader,
-                title: 'Properties',
+                title: 'Additional Properties',
                 hasChildren: Object.keys(info.properties).length !== 0,
                 info
             });
