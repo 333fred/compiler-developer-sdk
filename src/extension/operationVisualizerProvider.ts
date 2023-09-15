@@ -104,22 +104,46 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
     getTreeItem(element: TreeNode): vscode.TreeItem {
         if (element.kind === "symbol" || element.kind === "ioperation") {
             const node = element.node;
-            let treeItem = new vscode.TreeItem(`${node.nodeType.symbol}`, node.hasSymbolChildren || node.hasIOperationChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+            let treeItem = new vscode.TreeItem(
+                `${node.nodeType.symbol}`,
+                node.hasSymbolChildren || node.hasIOperationChildren || element.kind == "ioperation"
+                    ? vscode.TreeItemCollapsibleState.Collapsed
+                    : vscode.TreeItemCollapsibleState.None);
             treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
             treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
             treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
-            treeItem.id = `${node.symbolId}-${node.ioperationId}`;
+            treeItem.id = `${node.symbolId}-${node.ioperationInfo?.ioperationId}`;
 
             return treeItem;
         }
-        else {
-            const node = (<OperationsNode>element).parentNode;
+        else if (element.kind === 'operationsNode') {
+            const node = element.parentNode;
             if (!node.hasIOperationChildren) {
                 return new vscode.TreeItem("No IOperation children");
             }
 
             const item = new vscode.TreeItem(`IOperation Nodes`, vscode.TreeItemCollapsibleState.Collapsed);
-            item.iconPath = new vscode.ThemeIcon("code");
+            item.iconPath = getSymbolKindIcon("Code");
+            return item;
+        }
+        else if (element.kind === 'ioperationChild') {
+            const node = (<IOperationChildNode>element).child;
+
+            const item = new vscode.TreeItem(`${node.name}`, node.isPresent ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+            item.description = node.isPresent
+                ? ""
+                : node.isArray ? "[]" : "null";
+            item.iconPath = node.isArray ? getSymbolKindIcon("List") : getSymbolKindIcon("Class");
+
+            return item;
+        }
+        else if (element.kind === 'propertiesNode') {
+            return new vscode.TreeItem(`Properties`, vscode.TreeItemCollapsibleState.Collapsed);
+        }
+        else {
+            const node = <PropertyNode>element;
+            const item = new vscode.TreeItem(`${node.name}`, vscode.TreeItemCollapsibleState.None);
+            item.description = node.description;
             return item;
         }
     }
@@ -159,7 +183,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         else if (element.kind === "operationsNode") {
             const operationsRoot = await this.server.experimental.sendServerRequest(
                 operationChildren,
-                { textDocument: element.identifier , parentSymbolId: element.parentNode.symbolId },
+                { textDocument: element.identifier, parentSymbolId: element.parentNode.symbolId },
                 lsp.CancellationToken.None);
 
             if (!operationsRoot || !Array.isArray(operationsRoot.nodes)) {
@@ -168,10 +192,16 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
 
             return operationsRoot.nodes.map(node => { return { kind: 'ioperation', node, identifier: element.identifier }; });
         }
-        else {
+        else if (element.kind === "ioperationChild") {
+            const parent = element.parent;
             const operationsRoot = await this.server.experimental.sendServerRequest(
                 operationChildren,
-                { textDocument: element.identifier , parentSymbolId: element.node.symbolId, parentIOperationId: element.node.ioperationId },
+                {
+                    textDocument: element.identifier,
+                    parentSymbolId: parent.symbolId,
+                    parentIOperationId: parent.ioperationInfo!.ioperationId,
+                    parentIOperationPropertyName: element.child.name
+                },
                 lsp.CancellationToken.None);
 
             if (!operationsRoot || !Array.isArray(operationsRoot.nodes)) {
@@ -179,6 +209,31 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             }
 
             return operationsRoot.nodes.map(node => { return { kind: 'ioperation', node, identifier: element.identifier }; });
+        }
+        else if (element.kind == "property") {
+            return [];
+        }
+        else if (element.kind === "propertiesNode") {
+            const children: TreeNode[] = [];
+            const operationInfo = element.parentNode.ioperationInfo!;
+            for (const [key, value] of Object.entries(operationInfo.Properties).sort((a, b) => a[0].localeCompare(b[0]))) {
+                children.push({ kind: 'property', name: key, description: value });
+            }
+
+            return children;
+        }
+        else {
+            const children: TreeNode[] = [];
+
+            const node = <IOperationTreeNodeAndFile>element;
+            const operationInfo = node.node.ioperationInfo;
+            assert(operationInfo);
+            children.push(...operationInfo.operationChildrenInfo.map(child => {
+                return (<IOperationChildNode>{ kind: 'ioperationChild', child, parent: node.node, identifier: element.identifier });
+            }));
+            children.push({ kind: 'propertiesNode', parentNode: node.node, identifier: element.identifier })
+
+            return children;
         }
     }
 
@@ -186,7 +241,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         const response = await this.server.experimental.sendServerRequest(ioperationNodeParentRequest, {
             textDocument: element.identifier,
             childSymbolId: element.node.symbolId,
-            childIOperationId: element.node.ioperationId
+            childIOperationId: element.node.ioperationInfo?.ioperationId
         }, lsp.CancellationToken.None);
         if (!response || !response.parent) {
             return undefined;
@@ -249,6 +304,7 @@ interface IOperationChildrenRequest {
     textDocument: lsp.TextDocumentIdentifier;
     parentSymbolId: number;
     parentIOperationId?: number;
+    parentIOperationPropertyName?: string;
 }
 
 const ioperationNodeParentRequest = new lsp.RequestType<IOperationNodeParentRequest, NodeParentResponse<IOperationTreeNode>, void>('operationTree/parentNode', lsp.ParameterStructures.auto);
@@ -259,38 +315,9 @@ interface IOperationNodeParentRequest {
     childIOperationId?: number;
 }
 
-// const syntaxNodeInfoRequest = new lsp.RequestType<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse, void>('syntaxTree/info', lsp.ParameterStructures.auto);
-
-// interface SyntaxNodeInfoRequest {
-//     textDocument: lsp.TextDocumentIdentifier;
-//     node: SyntaxTreeNode;
-// }
-
-// interface SyntaxNodeInfoResponse {
-//     nodeType: SymbolAndKind;
-//     nodeSyntaxKind: string;
-//     semanticClassification?: string;
-//     nodeSymbolInfo?: NodeSymbolInfo;
-//     nodeTypeInfo?: NodeTypeInfo;
-//     nodeDeclaredSymbol: SymbolAndKind;
-//     properties: object;
-// }
-
-// interface NodeSymbolInfo {
-//     symbol: SymbolAndKind;
-//     candidateReason: string;
-//     candidateSymbols: SymbolAndKind[];
-// }
-
-// interface NodeTypeInfo {
-//     type: SymbolAndKind;
-//     convertedType: SymbolAndKind;
-//     conversion?: string;
-// }
-
 const operationNodeAtRangeRequest = new lsp.RequestType<NodeAtRangeRequest, NodeAtRangeResponse<IOperationTreeNode>, void>('operationTree/nodeAtRange', lsp.ParameterStructures.auto);
 
-type TreeNode = IOperationTreeNodeAndFile | OperationsNode;
+type TreeNode = IOperationTreeNodeAndFile | OperationsNode | IOperationChildNode | PropertyNode;
 
 interface IOperationTreeNodeAndFile {
     kind: "symbol" | "ioperation";
@@ -299,9 +326,22 @@ interface IOperationTreeNodeAndFile {
 }
 
 interface OperationsNode {
-    kind: "operationsNode";
+    kind: "operationsNode" | "propertiesNode";
     parentNode: IOperationTreeNode;
     identifier: lsp.TextDocumentIdentifier;
+}
+
+interface IOperationChildNode {
+    kind: "ioperationChild"
+    child: OperationChild;
+    parent: IOperationTreeNode;
+    identifier: lsp.TextDocumentIdentifier;
+}
+
+interface PropertyNode {
+    kind: "property";
+    name: string;
+    description: string;
 }
 
 interface IOperationTreeNode {
@@ -310,5 +350,17 @@ interface IOperationTreeNode {
     hasSymbolChildren: boolean;
     hasIOperationChildren: boolean;
     symbolId: number;
-    ioperationId?: number;
+    ioperationInfo?: IOperationNodeInformation;
+}
+
+interface IOperationNodeInformation {
+    ioperationId: number;
+    operationChildrenInfo: OperationChild[];
+    Properties: object;
+}
+
+interface OperationChild {
+    name: string;
+    isArray: boolean;
+    isPresent: boolean;
 }

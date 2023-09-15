@@ -17,6 +17,8 @@ sealed class IOperationChildrenRequest : ITextDocumentParams
     public int ParentSymbolId { get; init; }
     [DataMember(Name = "parentIOperationId")]
     public int? ParentIOperationId { get; init; }
+    [DataMember(Name = "parentIOperationPropertyName")]
+    public string? ParentIOperationPropertyName { get; init; }
 }
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(IOperationChildrenService)), Shared]
@@ -57,8 +59,9 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
         {
             if (idToOperation.TryGetValue(parentId, out var parentOperation))
             {
-                var children = parentOperation.ChildOperations.Select(o => o.ToTreeNode(request.ParentSymbolId, operationToId[o], text)).ToImmutableArray();
-                return new() { Nodes = children };
+                Debug.Assert(request.ParentIOperationPropertyName != null);
+                var operationChildren = IOperationNodeInformation.GetOperationChildrenForName(request.ParentIOperationPropertyName, parentOperation);
+                return new() { Nodes = operationChildren.Select(o => o.ToTreeNode(request.ParentSymbolId, operationToId[o], text)).ToImmutableArray() }; 
             }
             else
             {
