@@ -28,20 +28,19 @@ sealed class IOperationNodeInformation
     public required int IOperationId { get; init; }
     [DataMember(Name = "operationChildrenInfo")]
     public required ImmutableArray<OperationChild> OperationChildrenInfo { get; init; }
-    [DataMember(Name = "Properties")]
-    public required IReadOnlyDictionary<string, string> Properties { get; init; }
 
-    public static IOperationNodeInformation FromOperation(IOperation operation, int operationId)
+    public static IOperationNodeInformation FromOperation(IOperation operation, int operationId, out IReadOnlyDictionary<string, string> properties)
     {
-        var operationType = operation.GetType();
-        var reflectionInfo = s_reflectionInformation.GetOrAdd(operationType, CreateReflectionInformation);
+        var reflectionInfo = NodeReflectionHelpers.GetIOperationReflectionInformation(operation);
 
-        var properties = new Dictionary<string, string>(reflectionInfo.NonOperationPropertyAccessors.Count);
+        var propertiesDictionary = new Dictionary<string, string>(reflectionInfo.NonOperationPropertyAccessors.Count);
         foreach (var name in reflectionInfo.NonOperationPropertyNames)
         {
             var value = reflectionInfo.NonOperationPropertyAccessors[name](operation);
-            properties.Add(name, value?.ToString() ?? "<null>");
+            propertiesDictionary.Add(name, value?.ToString() ?? "<null>");
         }
+
+        properties = propertiesDictionary;
 
         var operationChildrenNames = ImmutableArray.CreateBuilder<OperationChild>(reflectionInfo.OperationChildNames.Length);
         foreach (var (name, isArray) in reflectionInfo.OperationChildNames)
@@ -54,49 +53,12 @@ sealed class IOperationNodeInformation
         {
             IOperationId = operationId,
             OperationChildrenInfo = operationChildrenNames.ToImmutable(),
-            Properties = properties,
         };
-    }
-
-    private static ReflectionInformation CreateReflectionInformation(Type t)
-    {
-        var operationChildNames = ImmutableArray.CreateBuilder<(string Name, bool IsArray)>();
-        var operationPropertyAccessors = new Dictionary<string, Func<object?, object?>>();
-        var nonOperationPropertyNames = ImmutableArray.CreateBuilder<string>();
-        var nonOperationPropertyAccessors = new Dictionary<string, Func<object?, object?>>();
-
-        foreach (var property in t.GetProperties())
-        {
-            if (property.Name == nameof(IOperation.Parent)) continue;
-
-            if (property.PropertyType.IsAssignableTo(IOperationType))
-            {
-                operationChildNames.Add((property.Name, false));
-                operationPropertyAccessors.Add(property.Name, property.GetValue);
-            }
-            else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == ImmutableArrayType)
-            {
-                var elementType = property.PropertyType.GetGenericArguments()[0];
-                if (elementType.IsAssignableTo(IOperationType))
-                {
-                    operationChildNames.Add((property.Name, true));
-                    operationPropertyAccessors.Add(property.Name, property.GetValue);
-                }
-            }
-            else
-            {
-                nonOperationPropertyNames.Add(property.Name);
-                nonOperationPropertyAccessors.Add(property.Name, property.GetValue);
-            }
-        }
-
-        return new(operationChildNames.ToImmutable(), operationPropertyAccessors, nonOperationPropertyNames.ToImmutable(), nonOperationPropertyAccessors);
     }
 
     public static ImmutableArray<IOperation> GetOperationChildrenForName(string name, IOperation parent)
     {
-        var parentType = parent.GetType();
-        var reflectionInfo = s_reflectionInformation.GetOrAdd(parentType, CreateReflectionInformation);
+        var reflectionInfo = NodeReflectionHelpers.GetIOperationReflectionInformation(parent);
 
         var accessor = reflectionInfo.OperationPropertyAccessors[name];
 
@@ -104,7 +66,7 @@ sealed class IOperationNodeInformation
         {
             IOperation operation => ImmutableArray.Create(operation),
             IEnumerable<IOperation> operations => operations.ToImmutableArray(),
-            var x => throw new InvalidOperationException($"Property {name} on {parentType} is not an IOperation or IEnumerable<IOperation>: {x?.GetType().ToString() ?? "<null>"}")
+            var x => throw new InvalidOperationException($"Property {name} on {parent.GetType()} is not an IOperation or IEnumerable<IOperation>: {x?.GetType().ToString() ?? "<null>"}")
         };
     }
 }

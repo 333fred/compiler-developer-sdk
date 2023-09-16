@@ -96,11 +96,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
     getTreeItem(element: TreeNode): vscode.TreeItem {
         if (element.kind === "symbol" || element.kind === "ioperation") {
             const node = element.node;
-            let treeItem = new vscode.TreeItem(
-                `${node.nodeType.symbol}`,
-                node.hasSymbolChildren || node.hasIOperationChildren || element.kind == "ioperation"
-                    ? vscode.TreeItemCollapsibleState.Collapsed
-                    : vscode.TreeItemCollapsibleState.None);
+            let treeItem = new vscode.TreeItem( `${node.nodeType.symbol}`, vscode.TreeItemCollapsibleState.Collapsed);
             treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
             treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
             treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
@@ -124,7 +120,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             item.description = node.isPresent
                 ? ""
                 : node.isArray ? "[]" : "null";
-            item.iconPath = node.isArray ? getSymbolKindIcon("List") : getSymbolKindIcon("Class");
+            item.iconPath = node.isArray ? getSymbolKindIcon("List") : getSymbolKindIcon("Property");
 
             return item;
         }
@@ -165,11 +161,15 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
                 return [];
             }
 
-            var operationsNode: TreeNode[] = element?.node.hasIOperationChildren
+            const nonSymbolChildren: TreeNode[] = element?.node.hasIOperationChildren
                 ? [{ kind: "operationsNode", identifier, parentNode: element.node }]
                 : [];
 
-            return operationsNode.concat(children.nodes.map(node => { return { kind: 'symbol', node, identifier }; }));
+            if (element && element.node.properties) {
+                nonSymbolChildren.push({ kind: "propertiesNode", identifier, parentNode: element.node });
+            }
+
+            return nonSymbolChildren.concat(children.nodes.map(node => { return { kind: 'symbol', node, identifier }; }));
         }
         else if (element.kind === "operationsNode") {
             const operationsRoot = await this.server.experimental.sendServerRequest(
@@ -206,8 +206,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         }
         else if (element.kind === "propertiesNode") {
             const children: TreeNode[] = [];
-            const operationInfo = element.parentNode.ioperationInfo!;
-            for (const [key, value] of Object.entries(operationInfo.Properties).sort((a, b) => a[0].localeCompare(b[0]))) {
+            for (const [key, value] of Object.entries(element.parentNode.properties!).sort((a, b) => a[0].localeCompare(b[0]))) {
                 children.push({ kind: 'property', name: key, description: value });
             }
 
@@ -308,7 +307,7 @@ interface IOperationNodeParentRequest {
 
 const operationNodeAtRangeRequest = new lsp.RequestType<NodeAtRangeRequest, NodeAtRangeResponse<IOperationTreeNode>, void>('operationTree/nodeAtRange', lsp.ParameterStructures.auto);
 
-type TreeNode = IOperationTreeNodeAndFile | OperationsNode | IOperationChildNode | PropertyNode;
+type TreeNode = IOperationTreeNodeAndFile | ParentNode | IOperationChildNode | PropertyNode;
 
 interface IOperationTreeNodeAndFile {
     kind: "symbol" | "ioperation";
@@ -316,7 +315,7 @@ interface IOperationTreeNodeAndFile {
     identifier: lsp.TextDocumentIdentifier;
 }
 
-interface OperationsNode {
+interface ParentNode {
     kind: "operationsNode" | "propertiesNode";
     parentNode: IOperationTreeNode;
     identifier: lsp.TextDocumentIdentifier;
@@ -342,12 +341,12 @@ interface IOperationTreeNode {
     hasIOperationChildren: boolean;
     symbolId: number;
     ioperationInfo?: IOperationNodeInformation;
+    properties?: object;
 }
 
 interface IOperationNodeInformation {
     ioperationId: number;
     operationChildrenInfo: OperationChild[];
-    Properties: object;
 }
 
 interface OperationChild {

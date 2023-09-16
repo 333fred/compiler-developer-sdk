@@ -1,6 +1,4 @@
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
@@ -25,6 +23,8 @@ sealed class IOperationTreeNode
     public required int SymbolId { get; init; }
     [DataMember(Name = "ioperationInfo")]
     public required IOperationNodeInformation? IOperationInfo { get; init; }
+    [DataMember(Name = "properties")]
+    public required IReadOnlyDictionary<string, string>? Properties { get; init; }
 
     public static IOperationTreeNode SymbolToTreeItem(ISymbol? symbol, bool hasIOperationChildren, LinePositionSpan originalLocation, int symbolId, ImmutableArray<int> childIds)
     {
@@ -39,7 +39,16 @@ sealed class IOperationTreeNode
                 SymbolId = symbolId,
                 Range = ProtocolConversions.LinePositionToRange(originalLocation),
                 IOperationInfo = null,
+                Properties = null
             };
+        }
+
+        var reflectionInformation = NodeReflectionHelpers.GetSymbolReflectionInformation(symbol);
+        Dictionary<string, string> properties = new(reflectionInformation.PropertyAccessors.Count);
+        foreach (var (name, accessor) in reflectionInformation.PropertyAccessors)
+        {
+            var value = accessor(symbol);
+            properties.Add(name, value?.ToString() ?? "<null>");
         }
 
         return new()
@@ -50,20 +59,18 @@ sealed class IOperationTreeNode
             SymbolId = symbolId,
             Range = ProtocolConversions.LinePositionToRange(originalLocation),
             IOperationInfo = null,
+            Properties = properties,
         };
     }
 }
 
 static class IOperationExtensions
 {
-    private static readonly ConcurrentDictionary<Type, string> s_operationTypeToInterfaceName = new();
-    private static readonly Type IOperationType = typeof(IOperation);
-
     public static IOperationTreeNode ToTreeNode(this IOperation operation, int containingSymbolId, int ioperationId, SourceText text)
     {
         var operationSpan = text.Lines.GetLinePositionSpan(operation.Syntax.Span);
 
-        var nodeName = s_operationTypeToInterfaceName.GetOrAdd(operation.GetType(), GetIOperationInterfaceName);
+        var nodeName = NodeReflectionHelpers.GetIOperationInterfaceName(operation);
 
         return new()
         {
@@ -72,25 +79,8 @@ static class IOperationExtensions
             HasIOperationChildren = operation.ChildOperations.Any(),
             SymbolId = containingSymbolId,
             Range = ProtocolConversions.LinePositionToRange(operationSpan),
-            IOperationInfo = IOperationNodeInformation.FromOperation(operation, ioperationId)
+            IOperationInfo = IOperationNodeInformation.FromOperation(operation, ioperationId, out var properties),
+            Properties = properties,
         };
-
-        static string GetIOperationInterfaceName(Type t)
-        {
-            Debug.Assert(t.IsAssignableTo(IOperationType));
-
-            foreach (var @interface in t.GetInterfaces())
-            {
-                // Find the interface that is assignable to IOperation but is not IOperation itself
-                if (@interface.IsAssignableTo(IOperationType) && @interface != IOperationType)
-                {
-                    return @interface.Name;
-                }
-            }
-
-            // This is NoneOperation
-            Debug.Assert(t.Name == "NoneOperation");
-            return "NoneOperation";
-        }
     }
 }
