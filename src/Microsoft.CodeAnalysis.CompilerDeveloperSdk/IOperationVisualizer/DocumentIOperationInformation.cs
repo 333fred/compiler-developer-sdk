@@ -205,7 +205,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
 
 record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
 {
-    private static readonly StrongBox<IOperationChildren> s_empty = new(new(ImmutableDictionary<IOperation, int>.Empty, ImmutableDictionary<int, IOperation>.Empty, ImmutableArray<int>.Empty));
+    private static readonly StrongBox<IOperationChildren> s_empty = new(new(ImmutableDictionary<IOperation, (int, string?)>.Empty, ImmutableDictionary<int, (IOperation, string?)>.Empty, ImmutableArray<int>.Empty));
     private static readonly ImmutableArray<int> s_noAttributes = ImmutableArray.Create(0);
 
     private StrongBox<IOperationChildren>? _operationToId = null;
@@ -259,9 +259,9 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
             return _operationToId.Value;
         }
 
-        var operationToId = new Dictionary<IOperation, int>();
-        var idToOperation = new Dictionary<int, IOperation>();
-        var stack = new Stack<IOperation>();
+        var operationToId = new Dictionary<IOperation, (int, string?)>();
+        var idToOperation = new Dictionary<int, (IOperation, string?)>();
+        var stack = new Stack<(IOperation Operation, string? ParentName)>();
         var currentId = 0;
 
         ImmutableArray<int> roots = default;
@@ -310,23 +310,35 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
 
         void walkIOperationChildren(IOperation root)
         {
-            stack.Push(root);
+            stack.Push((root, null));
 
             while (stack.TryPop(out var current))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                operationToId.Add(current, currentId);
+                operationToId.Add(current.Operation, (currentId, current.ParentName));
                 idToOperation.Add(currentId++, current);
-                foreach (var child in current.ChildOperations.Reverse())
+                var reflectionInfo = NodeReflectionHelpers.GetIOperationReflectionInformation(current.Operation);
+                foreach (var (name, accessor) in reflectionInfo.OperationPropertyAccessors)
                 {
-                    stack.Push(child);
+                    switch (accessor(current.Operation))
+                    {
+                        case IOperation childOperation:
+                            stack.Push((childOperation, name));
+                            break;
+                        case IEnumerable<IOperation> childOperations:
+                            foreach (var childOperation in childOperations)
+                            {
+                                stack.Push((childOperation, name));
+                            }
+                            break;
+                    }
                 }
             }
         }
     }
 }
 
-readonly record struct IOperationChildren(IReadOnlyDictionary<IOperation, int> IOperationToId, IReadOnlyDictionary<int, IOperation> IdToIOperation, ImmutableArray<int> Roots);
+readonly record struct IOperationChildren(IReadOnlyDictionary<IOperation, (int Id, string? ParentName)> IOperationToId, IReadOnlyDictionary<int, (IOperation Operation, string? ParentName)> IdToIOperation, ImmutableArray<int> Roots);
 
 sealed class IOperationVisualizerCache : VisualizerCache<DocumentIOperationInformation>;
 

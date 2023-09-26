@@ -15,21 +15,15 @@ sealed class IOperationNodeInformation
         bool IsArray,
         [property: DataMember(Name = "isPresent")]
         bool IsPresent);
-    private readonly record struct ReflectionInformation(
-        ImmutableArray<(string Name, bool IsArray)> OperationChildNames,
-        IReadOnlyDictionary<string, Func<object?, object?>> OperationPropertyAccessors,
-        ImmutableArray<string> NonOperationPropertyNames,
-        IReadOnlyDictionary<string, Func<object?, object?>> NonOperationPropertyAccessors);
-    private static readonly ConcurrentDictionary<Type, ReflectionInformation> s_reflectionInformation = new();
-    private static readonly Type IOperationType = typeof(IOperation);
-    private static readonly Type ImmutableArrayType = typeof(ImmutableArray<>);
 
+    [DataMember(Name = "parentName")]
+    public required string? ParentName { get; init; }
     [DataMember(Name = "ioperationId")]
     public required int IOperationId { get; init; }
     [DataMember(Name = "operationChildrenInfo")]
     public required ImmutableArray<OperationChild> OperationChildrenInfo { get; init; }
 
-    public static IOperationNodeInformation FromOperation(IOperation operation, int operationId, out IReadOnlyDictionary<string, string> properties)
+    public static IOperationNodeInformation FromOperation(IOperation operation, int operationId, string? parentName, out IReadOnlyDictionary<string, string> properties)
     {
         var reflectionInfo = NodeReflectionHelpers.GetIOperationReflectionInformation(operation);
 
@@ -51,6 +45,7 @@ sealed class IOperationNodeInformation
 
         return new()
         {
+            ParentName = parentName,
             IOperationId = operationId,
             OperationChildrenInfo = operationChildrenNames.ToImmutable(),
         };
