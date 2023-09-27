@@ -218,7 +218,7 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
 
     public bool HasIOperationChildren
         => _operationToId != null
-           ? _operationToId == s_empty
+           ? _operationToId != s_empty
            : Syntax switch
            {
                VariableDeclaratorSyntax { Initializer: not null } => true,
@@ -226,7 +226,6 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
                MemberDeclarationSyntax { AttributeLists.Count: > 0 } => true,
                AccessorDeclarationSyntax accessor => accessor.Body is not null || accessor.ExpressionBody is not null,
                ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax } => true,
-               // TODO: Attributes, particularly on properties
                _ => false
            };
 
@@ -264,7 +263,7 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
         var stack = new Stack<(IOperation Operation, string? ParentName)>();
         var currentId = 0;
 
-        ImmutableArray<int> roots = default;
+        ImmutableArray<int> roots;
         if (iopRoot is not null)
         {
             walkIOperationChildren(iopRoot);

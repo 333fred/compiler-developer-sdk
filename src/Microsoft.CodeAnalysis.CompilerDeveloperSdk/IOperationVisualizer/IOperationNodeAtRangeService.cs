@@ -1,5 +1,6 @@
 using System.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
@@ -34,6 +35,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
 
         var span = ProtocolConversions.RangeToTextSpan(request.Range, text);
         var element = root.FindNode(span);
+        var mostSpecificNode = element;
 
         // Now that we have the syntax of the specific location the user requested, walk upwards until we find the enclosing member declaration,
         // so that we can get the enclosing symbol for the current spot.
@@ -44,8 +46,12 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
                 // we assume the user will want the first field decl
                 || (element is FieldDeclarationSyntax { Declaration.Variables: { } variables } && tryGetCacheEntry(variables[0], out entry)))
             {
-                // TODO: Now walk in to find the actual IOperation node in question, if it exists.
-                return new() { Node = entry?.ToTreeNode(text) };
+                return new()
+                {
+                    Node = (await getNestedIOperation(entry, mostSpecificNode)) is ({ } op, var id)
+                        ? op.ToTreeNode(cacheEntry.SyntaxNodeToId[entry.Syntax], id, text)
+                        : entry.ToTreeNode(text)
+                };
             }
 
             element = element.Parent;
@@ -55,7 +61,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
         Debug.Fail($"Couldn't find a node for the given range {span}");
         return null;
 
-        bool tryGetCacheEntry(SyntaxNode syntaxNode, out SyntaxAndSymbol? entry)
+        bool tryGetCacheEntry(SyntaxNode syntaxNode, [NotNullWhen(true)] out SyntaxAndSymbol? entry)
         {
             if (cacheEntry.SyntaxNodeToId.TryGetValue(syntaxNode, out var id))
             {
@@ -65,6 +71,25 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
 
             entry = null;
             return false;
+        }
+
+        async Task<(IOperation? Operation, int OperationId)> getNestedIOperation(SyntaxAndSymbol symbol, SyntaxNode mostSpecificNode)
+        {
+            var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+            Debug.Assert(model != null);
+            var current = mostSpecificNode;
+            var operationInformation = await symbol.GetOrComputeIOperationChildrenAsync(document, cancellationToken).ConfigureAwait(false);
+            while (current != symbol.Syntax && current != null)
+            {
+                if (model.GetOperation(current) is { } op)
+                {
+                    return (op, operationInformation.IOperationToId[op]);
+                }
+
+                current = current.Parent;
+            }
+
+            return default;
         }
     }
 }

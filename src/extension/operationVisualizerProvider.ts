@@ -26,7 +26,7 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
             }
 
             operationTreeProvider.editorChangeCausedDataChange = true;
-            await treeView.reveal({ kind: 'symbol', node: response.node, identifier: textDocument });
+            await treeView.reveal({ kind: response.node.ioperationInfo ? 'ioperation' : 'symbol', node: response.node, identifier: textDocument });
             if (operationTreeProvider.highlightEnabled) {
                 const responseRange = response.node.range;
                 const highlightRange = new vscode.Range(
@@ -201,7 +201,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
 
             return operationsRoot.nodes.map(node => { return { kind: 'ioperation', node, identifier: element.identifier }; });
         }
-        else if (element.kind == "property") {
+        else if (element.kind === "property") {
             return [];
         }
         else if (element.kind === "propertiesNode") {
@@ -221,24 +221,49 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             children.push(...operationInfo.operationChildrenInfo.map(child => {
                 return (<IOperationChildNode>{ kind: 'ioperationChild', child, parent: node.node, identifier: element.identifier });
             }));
-            children.push({ kind: 'propertiesNode', parentNode: node.node, identifier: element.identifier })
+            children.push({ kind: 'propertiesNode', parentNode: node.node, identifier: element.identifier });
 
             return children;
         }
     }
 
-    async getParent(element: IOperationTreeNodeAndFile): Promise<IOperationTreeNodeAndFile | undefined> {
+    async getParent(element: TreeNode): Promise<TreeNode | undefined> {
+        let identifier: lsp.TextDocumentIdentifier;
+        let childNode: IOperationTreeNode;
+        if (element.kind === 'symbol') {
+            identifier = element.identifier;
+            childNode = element.node;
+        }
+        else if (element.kind === 'operationsNode') {
+            const node = <ParentNode>element;
+            return <IOperationTreeNodeAndFile>{ kind: 'symbol', node: node.parentNode, identifier: node.identifier };
+        }
+        else if (element.kind === 'ioperationChild') {
+            identifier = element.identifier;
+            childNode = element.child;
+        }
+
         const response = await this.server.experimental.sendServerRequest(ioperationNodeParentRequest, {
-            textDocument: element.identifier,
-            childSymbolId: element.node.symbolId,
-            childIOperationId: element.node.ioperationInfo?.ioperationId
+            textDocument: identifier,
+            childSymbolId: childNode.symbolId,
+            childIOperationId: childNode.ioperationInfo?.ioperationId
         }, lsp.CancellationToken.None);
         if (!response || !response.parent) {
             return undefined;
         }
 
-        // TODO: Support getting parent of IOperation node
-        return { kind: 'symbol', identifier: element.identifier, node: response.parent };
+        let kind: 'symbol' | 'ioperation' = 'symbol';
+        if (element.kind === 'ioperation') {
+            // Reached the end of the 
+            if (!response.parent.ioperationInfo) {
+                // Reached the end of the ioperation nodes. Return iop parent collapsible node
+                return { kind: "operationsNode", identifier: element.identifier, parentNode: response.parent };
+            }
+
+            kind = 'ioperation';
+        }
+
+        return { kind, identifier: identifier, node: response.parent };
     }
 
     private _highlightRange(range: lsp.Range) {
@@ -297,12 +322,17 @@ interface IOperationChildrenRequest {
     parentIOperationPropertyName?: string;
 }
 
-const ioperationNodeParentRequest = new lsp.RequestType<IOperationNodeParentRequest, NodeParentResponse<IOperationTreeNode>, void>('operationTree/parentNode', lsp.ParameterStructures.auto);
+const ioperationNodeParentRequest = new lsp.RequestType<IOperationNodeParentRequest, IOperationNodeParentResponse, void>('operationTree/parentNode', lsp.ParameterStructures.auto);
 
 interface IOperationNodeParentRequest {
     textDocument: lsp.TextDocumentIdentifier;
     childSymbolId: number;
     childIOperationId?: number;
+}
+
+interface IOperationNodeParentResponse extends NodeParentResponse<IOperationTreeNode> {
+    parentOperationPropertyName?: string;
+    isArray: boolean;
 }
 
 const operationNodeAtRangeRequest = new lsp.RequestType<NodeAtRangeRequest, NodeAtRangeResponse<IOperationTreeNode>, void>('operationTree/nodeAtRange', lsp.ParameterStructures.auto);
