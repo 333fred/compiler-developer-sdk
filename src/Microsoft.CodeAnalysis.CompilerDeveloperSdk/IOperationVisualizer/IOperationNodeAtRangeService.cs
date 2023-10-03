@@ -48,8 +48,8 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
             {
                 return new()
                 {
-                    Node = (await getNestedIOperation(entry, mostSpecificNode)) is ({ } op, var id)
-                        ? op.ToTreeNode(cacheEntry.SyntaxNodeToId[entry.Syntax], id, text)
+                    Node = (await getNestedIOperation(entry, mostSpecificNode)) is ({ } op, (var id, { } parentName, var isArray))
+                        ? op.ToTreeNode(cacheEntry.SyntaxNodeToId[entry.Syntax], id, new(parentName, isArray, IsPresent: true), text)
                         : entry.ToTreeNode(text)
                 };
             }
@@ -73,7 +73,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
             return false;
         }
 
-        async Task<(IOperation? Operation, int OperationId)> getNestedIOperation(SyntaxAndSymbol symbol, SyntaxNode mostSpecificNode)
+        async Task<(IOperation? Operation, (int OperationId, string? ParentName, bool ParentIsArray))> getNestedIOperation(SyntaxAndSymbol symbol, SyntaxNode mostSpecificNode)
         {
             var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             Debug.Assert(model != null);

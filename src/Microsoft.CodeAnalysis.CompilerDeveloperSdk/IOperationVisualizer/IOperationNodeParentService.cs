@@ -51,9 +51,9 @@ sealed class IOperationNodeParentService : AbstractCompilerDeveloperSdkLspServic
             return new();
         }
 
-        var childInfo = entry.IdToSymbol[request.ChildSymbolId];
+        var childSymbolInfo = entry.IdToSymbol[request.ChildSymbolId];
 
-        if (childInfo.ParentId == -1)
+        if (childSymbolInfo.ParentId == -1)
         {
             // Root node, no parent
             return new();
@@ -64,44 +64,26 @@ sealed class IOperationNodeParentService : AbstractCompilerDeveloperSdkLspServic
 
         if (request.ChildIOperationId is not -1 and int childId)
         {
-            var ioperationInfo = await childInfo.GetOrComputeIOperationChildrenAsync(document, cancellationToken).ConfigureAwait(false);
-            var childOperation = ioperationInfo.IdToIOperation[childId];
+            var childIOperationInfo = await childSymbolInfo.GetOrComputeIOperationChildrenAsync(document, cancellationToken).ConfigureAwait(false);
+            var (childOperation, _) = childIOperationInfo.IdToIOperation[childId];
 
             if (childOperation.Parent is { } parentOperation)
             {
-                var parentId = ioperationInfo.IOperationToId[parentOperation];
-                var (name, isArray) = getParentName(parentOperation) ?? default;
-                return new() { Parent = parentOperation.ToTreeNode(request.ChildSymbolId, parentId, text), ParentOperationPropertyName = name, IsArray = isArray };
-            }
-
-            return new() { Parent = childInfo.ToTreeNode(text) };
-        }
-
-        return new() { Parent = entry.IdToSymbol[childInfo.ParentId].ToTreeNode(text) };
-
-        static (string name, bool isArray)? getParentName(IOperation operation)
-        {
-            var parent = operation.Parent;
-            if (parent is null)
-            {
-                return null;
-            }
-
-            var reflectionInfo = NodeReflectionHelpers.GetIOperationReflectionInformation(parent);
-            foreach (var (name, accessor) in reflectionInfo.OperationPropertyAccessors)
-            {
-                var value = accessor(parent);
-
-                switch (value)
+                var (parentId, parentName, parentIsArray) = childIOperationInfo.IOperationToId[parentOperation];
+                var parentInfo = parentName != null
+                    ? new OperationChild(parentName, parentIsArray, IsPresent: true)
+                    : (OperationChild?)null;
+                return new()
                 {
-                    case IOperation operationValue when operationValue == operation:
-                        return (name, false);
-                    case ICollection<IOperation> operationValues when operationValues.Contains(operation):
-                        return (name, true);
-                }
+                    Parent = parentOperation.ToTreeNode(request.ChildSymbolId, parentId, parentInfo, text),
+                    ParentOperationPropertyName = parentName,
+                    IsArray = parentIsArray
+                };
             }
 
-            return null;
+            return new() { Parent = childSymbolInfo.ToTreeNode(text) };
         }
+
+        return new() { Parent = entry.IdToSymbol[childSymbolInfo.ParentId].ToTreeNode(text) };
     }
 }

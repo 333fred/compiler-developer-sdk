@@ -61,11 +61,16 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
             {
                 Debug.Assert(request.ParentIOperationPropertyName != null);
                 var operationChildren = IOperationNodeInformation.GetOperationChildrenForName(request.ParentIOperationPropertyName, parentOperation.Operation);
-                return new() { Nodes = operationChildren.Select(o =>
+                return new()
                 {
-                    (int id, string? parentName) = operationToId[o];
-                    return o.ToTreeNode(request.ParentSymbolId, id, parentName, text);
-                }).ToImmutableArray() };
+                    Nodes = operationChildren.Select(o =>
+                    {
+                        var (id, parentName, parentIsArray) = operationToId[o];
+                        Debug.Assert(parentName is not null);
+                        var parentInfo = new OperationChild(parentName, parentIsArray, IsPresent: true);
+                        return o.ToTreeNode(request.ParentSymbolId, id, parentInfo, text);
+                    }).ToImmutableArray()
+                };
             }
             else
             {
@@ -74,11 +79,14 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
         }
         else
         {
-            return new() { Nodes = roots.Select(r =>
+            return new()
             {
-                (IOperation operation, string? parentName) = idToOperation[r];
-                return operation.ToTreeNode(request.ParentSymbolId, r, parentName, text);
-            }).ToImmutableArray() };
+                Nodes = roots.Select(r =>
+                {
+                    (IOperation operation, string? parentName) = idToOperation[r];
+                    return operation.ToTreeNode(request.ParentSymbolId, r, parentInfo: null, text);
+                }).ToImmutableArray()
+            };
         }
 
     }

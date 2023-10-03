@@ -66,7 +66,7 @@ sealed class IOperationTreeNode
 
 static class IOperationExtensions
 {
-    public static IOperationTreeNode ToTreeNode(this IOperation operation, int containingSymbolId, int ioperationId, string? parentName, SourceText text)
+    public static IOperationTreeNode ToTreeNode(this IOperation operation, int containingSymbolId, int ioperationId, OperationChild? parentInfo, SourceText text)
     {
         var operationSpan = text.Lines.GetLinePositionSpan(operation.Syntax.Span);
 
@@ -79,7 +79,7 @@ static class IOperationExtensions
             HasIOperationChildren = operation.ChildOperations.Any(),
             SymbolId = containingSymbolId,
             Range = ProtocolConversions.LinePositionToRange(operationSpan),
-            IOperationInfo = IOperationNodeInformation.FromOperation(operation, ioperationId, parentName, out var properties),
+            IOperationInfo = IOperationNodeInformation.FromOperation(operation, ioperationId, parentInfo, out var properties),
             Properties = properties,
         };
     }

@@ -1,10 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Reflection;
 using System.Text.RegularExpressions;
-
-using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
@@ -30,7 +27,9 @@ static partial class NodeReflectionHelpers
 
             foreach (var property in t.GetProperties())
             {
-                if (property.Name == nameof(IOperation.Parent)) continue;
+#pragma warning disable CS0618 // IOperation.Children is obsolete
+                if (property.Name is nameof(IOperation.Parent) or nameof(IOperation.ChildOperations) or nameof(IOperation.Children) or nameof(IOperation.SemanticModel)) continue;
+#pragma warning restore CS0618
 
                 if (property.PropertyType.IsAssignableTo(IOperationType))
                 {

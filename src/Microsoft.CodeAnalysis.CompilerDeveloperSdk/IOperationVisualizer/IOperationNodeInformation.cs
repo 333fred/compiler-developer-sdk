@@ -4,25 +4,25 @@ using System.Runtime.Serialization;
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
+internal readonly record struct OperationChild(
+    [property: DataMember(Name = "name")]
+    string Name,
+    [property: DataMember(Name = "isArray")]
+    bool IsArray,
+    [property: DataMember(Name = "isPresent")]
+    bool IsPresent);
+
+[DataContract]
 sealed class IOperationNodeInformation
 {
-    [DataContract]
-    internal readonly record struct OperationChild(
-        [property: DataMember(Name = "name")]
-        string Name,
-        [property: DataMember(Name = "isArray")]
-        bool IsArray,
-        [property: DataMember(Name = "isPresent")]
-        bool IsPresent);
-
-    [DataMember(Name = "parentName")]
-    public required string? ParentName { get; init; }
+    [DataMember(Name = "parentInfo")]
+    public required OperationChild? ParentInfo { get; init; }
     [DataMember(Name = "ioperationId")]
     public required int IOperationId { get; init; }
     [DataMember(Name = "operationChildrenInfo")]
     public required ImmutableArray<OperationChild> OperationChildrenInfo { get; init; }
 
-    public static IOperationNodeInformation FromOperation(IOperation operation, int operationId, string? parentName, out IReadOnlyDictionary<string, string> properties)
+    public static IOperationNodeInformation FromOperation(IOperation operation, int operationId, OperationChild? parentInfo, out IReadOnlyDictionary<string, string> properties)
     {
         var reflectionInfo = NodeReflectionHelpers.GetIOperationReflectionInformation(operation);
 
@@ -44,7 +44,7 @@ sealed class IOperationNodeInformation
 
         return new()
         {
-            ParentName = parentName,
+            ParentInfo = parentInfo,
             IOperationId = operationId,
             OperationChildrenInfo = operationChildrenNames.ToImmutable(),
         };
