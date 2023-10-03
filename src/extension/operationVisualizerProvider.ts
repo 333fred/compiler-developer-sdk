@@ -43,7 +43,7 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
         }
     });
 
-    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable, /*treeViewSelectionChangedDisposable*/];
+    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable];
 }
 
 const highlightEditorRangeCommand = 'csharp.operationTreeVisualizer.highlightRange';
@@ -262,7 +262,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
                 return { kind: "operationsRootNode", identifier: element.identifier, parentNode: response.parent };
             }
 
-            return {kind: 'ioperationChild', child: element.node.ioperationInfo!.parentInfo!, parentNode: response.parent, identifier: element.identifier };
+            return { kind: 'ioperationChild', child: element.node.ioperationInfo!.parentInfo!, parentNode: response.parent, identifier: element.identifier };
         }
 
         return { kind, identifier: identifier, node: response.parent };

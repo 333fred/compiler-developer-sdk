@@ -150,7 +150,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
 
             return propertiesNodeIfRequired.concat(children.nodes.map(node => { return { kind: 'SyntaxTreeNodeAndFile', node, identifier }; }));
         }
-        else if (element.kind == 'PropertiesRoot') {
+        else if (element.kind === 'PropertiesRoot') {
             let info: SyntaxNodeInfoResponse;
             try {
                 info = await this.server.experimental.sendServerRequest(syntaxNodeInfoRequest, { textDocument: element.identifier, node: element.node }, lsp.CancellationToken.None);
