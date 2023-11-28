@@ -3,7 +3,7 @@
     "displayName": ".NET Compiler Developer SDK",
     "publisher": "333fred",
     "description": "VS Code extension for working with and on the Roslyn compiler.",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "icon": "images/roslyn_icon_color.png",
     "repository": {
         "type": "git",
@@ -28,7 +28,7 @@
             "activitybar": [
                 {
                     "id": "csharp-syntax-visualizer",
-                    "title": "CSharp Syntax Visualizer",
+                    "title": "CSharp Visualizers",
                     "icon": "images/roslyn_icon_grayscale.svg"
                 }
             ]
@@ -42,9 +42,10 @@
                     "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
                 },
                 {
-                    "id": "syntaxProperties",
-                    "name": "Syntax Node Properties",
-                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
+                    "id": "operationTree",
+                    "name": "IOperation Tree",
+                    "type": "tree",
+                    "when": "config.compilerDeveloperSdk.enableIOperationVisualizer"
                 }
             ]
         },
@@ -52,8 +53,58 @@
             {
                 "view": "syntaxTree",
                 "contents": "No C# file opened."
+            },
+            {
+                "view": "operationTree",
+                "contents": "No C# file opened."
             }
         ],
+        "commands": [
+            {
+                "command": "compilerDeveloperSdk.highlightOnClickSyntax",
+                "title": "Highlight file location on clicking syntax tree nodes",
+                "icon": "$(arrow-swap)"
+            },
+            {
+                "command": "compilerDeveloperSdk.highlightOnClickIOperation",
+                "title": "Highlight file location on clicking IOperation tree nodes",
+                "icon": "$(arrow-swap)"
+            },
+            {
+                "command": "compilerDeveloperSdk.collapseSyntaxVisualizer",
+                "title": "Collapse Syntax Visualizer",
+                "icon": "$(collapse-all)"
+            },
+            {
+                "command": "compilerDeveloperSdk.collapseIOperationVisualizer",
+                "title": "Collapse IOperation Visualizer",
+                "icon": "$(collapse-all)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "compilerDeveloperSdk.collapseSyntaxVisualizer",
+                    "when": "view == syntaxTree",
+                    "group": "navigation"
+                },
+                {
+                    "command": "compilerDeveloperSdk.collapseIOperationVisualizer",
+                    "when": "view == operationTree",
+                    "group": "navigation"
+                },
+                {
+                    "command": "compilerDeveloperSdk.highlightOnClickSyntax",
+                    "when": "view == syntaxTree",
+                    "group": "navigation"
+                },
+                {
+                    "command": "compilerDeveloperSdk.highlightOnClickIOperation",
+                    "when": "view == operationTree",
+                    "group": "navigation"
+                }
+            ]
+        },
         "configuration": {
             "title": ".NET Compiler Developer SDK",
             "properties": {
@@ -62,6 +113,12 @@
                     "default": true,
                     "title": "C# Syntax Visualizer",
                     "description": "Enable the C# Syntax Visualizer"
+                },
+                "compilerDeveloperSdk.enableIOperationVisualizer": {
+                    "type": "boolean",
+                    "default": true,
+                    "title": "C# IOperation Visualizer",
+                    "description": "Enable the C# IOperation Visualizer"
                 },
                 "compilerDeveloperSdk.syncCursorWithTree": {
                     "type": "boolean",

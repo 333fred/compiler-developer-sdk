@@ -11,13 +11,13 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 sealed class SyntaxTreeNode
 {
     [DataMember(Name = "nodeType")]
-    public required SymbolAndKind NodeType { get; set; }
+    public required SymbolAndKind NodeType { get; init; }
     [DataMember(Name = "range")]
-    public required LSP.Range Range { get; set; }
+    public required LSP.Range Range { get; init; }
     [DataMember(Name = "hasChildren")]
-    public required bool HasChildren { get; set; }
+    public required bool HasChildren { get; init; }
     [DataMember(Name = "nodeId")]
-    public required int NodeId { get; set; }
+    public required int NodeId { get; init; }
 
     public static SyntaxTreeNode NodeOrTokenOrTriviaToTreeItem(SyntaxNodeOrTokenOrTrivia element, SourceText text, int nodeId)
     {
@@ -32,14 +32,14 @@ sealed class SyntaxTreeNode
 }
 
 [DataContract]
-record struct SymbolAndKind
+readonly record struct SymbolAndKind
 {
     public static SymbolAndKind Null { get; } = new() { Symbol = "<null>", SymbolKind = "Unknown" };
 
     [DataMember(Name = "symbol")]
-    public required string Symbol { get; set; }
+    public required string Symbol { get; init; }
     [DataMember(Name = "symbolKind")]
-    public required string SymbolKind { get; set; }
+    public required string SymbolKind { get; init; }
 
     public override readonly string ToString()
     {
