@@ -100,6 +100,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             treeItem.description = `[${node.range.start.line}:${node.range.start.character}-${node.range.end.line}:${node.range.end.character})`;
             treeItem.command = { "title": "Highlight Range", command: highlightEditorRangeCommand, arguments: [node.range] };
             treeItem.iconPath = getSymbolKindIcon(node.nodeType.symbolKind);
+            treeItem.id = `${treeItem.label}${treeItem.description}`;
 
             return treeItem;
         }
@@ -109,29 +110,30 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
                 return new vscode.TreeItem("No IOperation children");
             }
 
-            const item = new vscode.TreeItem(`IOperation Nodes`, vscode.TreeItemCollapsibleState.Collapsed);
-            item.iconPath = getSymbolKindIcon("Code");
-            return item;
+            const treeItem = new vscode.TreeItem(`IOperation Nodes`, vscode.TreeItemCollapsibleState.Collapsed);
+            treeItem.iconPath = getSymbolKindIcon("Code");
+            return treeItem;
         }
         else if (element.kind === 'ioperationChild') {
             const node = (<IOperationChildNode>element).child;
 
-            const item = new vscode.TreeItem(`${node.name}`, node.isPresent ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-            item.description = node.isPresent
+            const treeItem = new vscode.TreeItem(`${node.name}`, node.isPresent ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+            treeItem.description = node.isPresent
                 ? ""
                 : node.isArray ? "[]" : "null";
-            item.iconPath = node.isArray ? getSymbolKindIcon("List") : getSymbolKindIcon("Property");
+            treeItem.iconPath = node.isArray ? getSymbolKindIcon("List") : getSymbolKindIcon("Property");
 
-            return item;
+            return treeItem;
         }
         else if (element.kind === 'propertiesNode') {
             return new vscode.TreeItem(`Properties`, vscode.TreeItemCollapsibleState.Collapsed);
         }
         else {
             const node = <PropertyNode>element;
-            const item = new vscode.TreeItem(`${node.name}`, vscode.TreeItemCollapsibleState.None);
-            item.description = node.description;
-            return item;
+            const treeItem = new vscode.TreeItem(`${node.name}`, vscode.TreeItemCollapsibleState.None);
+            treeItem.description = node.description;
+            treeItem.id = `${treeItem.label}${treeItem.description}`;
+            return treeItem;
         }
     }
 
