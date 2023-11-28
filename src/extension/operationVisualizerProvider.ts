@@ -44,7 +44,7 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
     });
 
     const collapseAllDisposable = vscode.commands.registerCommand(
-        'compilerDeveloperSdk.collapseIOperationTree',
+        'compilerDeveloperSdk.collapseIOperationVisualizer',
         () => vscode.commands.executeCommand('workbench.actions.treeView.operationTree.collapseAll'));
 
     return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable, collapseAllDisposable];
