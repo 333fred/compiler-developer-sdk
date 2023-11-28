@@ -43,7 +43,11 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
         }
     });
 
-    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable];
+    const collapseAllDisposable = vscode.commands.registerCommand(
+        'compilerDeveloperSdk.collapseIOperationTree',
+        () => vscode.commands.executeCommand('workbench.actions.treeView.operationTree.collapseAll'));
+
+    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable, collapseAllDisposable];
 }
 
 const highlightEditorRangeCommand = 'csharp.operationTreeVisualizer.highlightRange';

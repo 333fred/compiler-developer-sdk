@@ -69,10 +69,30 @@
                 "command": "compilerDeveloperSdk.highlightOnClickIOperation",
                 "title": "Highlight file location on clicking IOperation tree nodes",
                 "icon": "$(arrow-swap)"
+            },
+            {
+                "command": "compilerDeveloperSdk.collapseSyntaxVisualizer",
+                "title": "Collapse Syntax Visualizer",
+                "icon": "$(collapse-all)"
+            },
+            {
+                "command": "compilerDeveloperSdk.collapseIOperationVisualizer",
+                "title": "Collapse IOperation Visualizer",
+                "icon": "$(collapse-all)"
             }
         ],
         "menus": {
             "view/title": [
+                {
+                    "command": "compilerDeveloperSdk.collapseSyntaxVisualizer",
+                    "when": "view == syntaxTree",
+                    "group": "navigation"
+                },
+                {
+                    "command": "compilerDeveloperSdk.collapseIOperationVisualizer",
+                    "when": "view == operationTree",
+                    "group": "navigation"
+                },
                 {
                     "command": "compilerDeveloperSdk.highlightOnClickSyntax",
                     "when": "view == syntaxTree",

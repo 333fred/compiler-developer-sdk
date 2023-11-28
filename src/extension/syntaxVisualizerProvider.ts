@@ -42,7 +42,11 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
         }
     });
 
-    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable];
+    const collapseAllDisposable = vscode.commands.registerCommand(
+        'compilerDeveloperSdk.collapseSyntaxVisualizer',
+        () => vscode.commands.executeCommand('workbench.actions.treeView.syntaxTree.collapseAll'));
+
+    return [treeView, editorTextSelectionChangeDisposable, treeViewVisibilityDisposable, collapseAllDisposable];
 }
 
 const highlightEditorRangeCommand: string = 'csharp.syntaxTreeVisualizer.highlightRange';
