@@ -120,7 +120,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
                 treeItem = new vscode.TreeItem(element.title, collapsibleState);
                 treeItem.iconPath = element.icon;
                 treeItem.description = element.description;
-                treeItem.id = `${treeItem.label}${treeItem.description}`;
+                treeItem.tooltip = element.description;
 
                 return treeItem;
         }

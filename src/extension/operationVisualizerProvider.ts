@@ -136,7 +136,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             const node = <PropertyNode>element;
             const treeItem = new vscode.TreeItem(`${node.name}`, vscode.TreeItemCollapsibleState.None);
             treeItem.description = node.description;
-            treeItem.id = `${treeItem.label}${treeItem.description}`;
+            treeItem.tooltip = node.description;
             return treeItem;
         }
     }
@@ -167,12 +167,14 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
                 return [];
             }
 
-            const nonSymbolChildren: TreeNode[] = element?.node.hasIOperationChildren
-                ? [{ kind: "operationsRootNode", identifier, parentNode: element.node }]
-                : [];
+            const nonSymbolChildren: TreeNode[] = [];
 
             if (element && element.node.properties) {
                 nonSymbolChildren.push({ kind: "propertiesNode", identifier, parentNode: element.node });
+            }
+
+            if (element?.node.hasIOperationChildren) {
+                nonSymbolChildren.push({ kind: "operationsRootNode", identifier, parentNode: element.node });
             }
 
             return nonSymbolChildren.concat(children.nodes.map(node => { return { kind: 'symbol', node, identifier }; }));
@@ -224,10 +226,10 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
             const node = <IOperationTreeNodeAndFile>element;
             const operationInfo = node.node.ioperationInfo;
             assert(operationInfo);
+            children.push({ kind: 'propertiesNode', parentNode: node.node, identifier: element.identifier });
             children.push(...operationInfo.operationChildrenInfo.map(child => {
                 return (<IOperationChildNode>{ kind: 'ioperationChild', child, parentNode: node.node, identifier: element.identifier });
             }));
-            children.push({ kind: 'propertiesNode', parentNode: node.node, identifier: element.identifier });
 
             return children;
         }
