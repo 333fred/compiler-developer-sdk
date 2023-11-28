@@ -10,19 +10,37 @@ Visualize the syntax in a C# file live, as you type, and navigate around the str
 
 ![Syntax visualizer demonstration](./images/SyntaxVisualizerDemo.gif)
 
+### IOperation Visualizer
+
+Visualize the symbol and IOperation trees in a C# file live, as you type, and navigate around the structure interactively.
+
+![IOperation visualizer demonstration](./images/IOperationVisualizerDemo.gif)
+
 ## Requirements
 
 This extension depends on the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp).
 
 ## Extension Settings
 
-`"compilerdevelopersdk.enableSyntaxVisualizer"` - Turn on or off the C# Syntax Visualizer (defaults to on).
+* `"compilerdevelopersdk.enableSyntaxVisualizer"` - Turn on or off the C# Syntax Visualizer (defaults to on).
+* `"compilerdevelopersdk.enableIOperationVisualizer"` - Turn on or off the C# IOperation Visualizer (defaults to on).
+* `"compilerdevelopersdk.syncCursorWithTree"` - Reveal the tree node of the cursor location when clicking in a C# file (defaults to on).
+* `"compilerdevelopersdk.verboseLogging"` - Turn on or off extra logging for troubleshooting purposes (defaults to off).
 
 ## Known Issues
 
-Currently none.
+* Top-level statements reveal in the IOperation tree isn't always as specific as it could be.
 
 ## Release Notes
+
+### 0.2.0
+
+* Added IOperation Visualization support. You can now view IOperation nodes similarly to how you view syntax nodes, with a new dedicated view
+  in the same panel.
+* Reorganized the settings, and moved location highlighting from a setting to a toggleable action for each tree visualizer.
+* Removed the properties pane. You can now view both syntax properties and IOperation properties as a subnode of a given syntax or IOperation node.
+* Fixed several ID tracking bugs.
+* Fixed several position tracking annoyances while typing.
 
 ### 0.1.2-prerelease
 

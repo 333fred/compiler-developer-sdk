@@ -3,7 +3,7 @@
     "displayName": ".NET Compiler Developer SDK",
     "publisher": "333fred",
     "description": "VS Code extension for working with and on the Roslyn compiler.",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "icon": "images/roslyn_icon_color.png",
     "repository": {
         "type": "git",
@@ -28,7 +28,7 @@
             "activitybar": [
                 {
                     "id": "csharp-syntax-visualizer",
-                    "title": "CSharp Syntax Visualizer",
+                    "title": "CSharp Visualizers",
                     "icon": "images/roslyn_icon_grayscale.svg"
                 }
             ]
