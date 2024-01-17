@@ -3,12 +3,11 @@ using System.Composition;
 using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
-sealed class SymbolTreeRequest : ITextDocumentParams
+sealed class SymbolTreeRequest
 {
     [DataMember(Name = "textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
@@ -36,7 +35,7 @@ sealed class SymbolTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentR
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(SymbolTreeRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(SymbolTreeRequest request) => request.TextDocument.Uri;
 
     public override async Task<IOperationTreeResponse> HandleRequestAsync(SymbolTreeRequest request, RequestContext context, CancellationToken cancellationToken)
     {

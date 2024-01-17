@@ -4,7 +4,6 @@ using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
@@ -31,7 +30,7 @@ sealed class SyntaxNodeParentService : AbstractCompilerDeveloperSdkLspServiceDoc
 
     public override bool RequiresLSPSolution => true;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeParentRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(SyntaxNodeParentRequest request) => request.TextDocument.Uri;
 
     public override async Task<NodeParentResponse<SyntaxTreeNode>> HandleRequestAsync(SyntaxNodeParentRequest request, RequestContext context, CancellationToken cancellationToken)
     {

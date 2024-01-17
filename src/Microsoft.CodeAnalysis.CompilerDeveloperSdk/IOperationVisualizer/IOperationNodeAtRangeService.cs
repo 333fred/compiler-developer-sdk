@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
@@ -22,7 +21,7 @@ sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServi
 
     public override bool MutatesSolutionState => false;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(NodeAtRangeRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(NodeAtRangeRequest request) => request.TextDocument.Uri;
 
     public override async Task<NodeAtRangeResponse<IOperationTreeNode>?> HandleRequestAsync(NodeAtRangeRequest request, RequestContext context, CancellationToken cancellationToken)
     {

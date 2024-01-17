@@ -4,12 +4,11 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
-sealed class SyntaxTreeRequest : ITextDocumentParams
+sealed class SyntaxTreeRequest
 {
     [DataMember(Name = "textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
@@ -38,7 +37,7 @@ sealed class SyntaxTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentR
 
     public override bool RequiresLSPSolution => true;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxTreeRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(SyntaxTreeRequest request) => request.TextDocument.Uri;
 
     public override async Task<SyntaxTreeResponse> HandleRequestAsync(SyntaxTreeRequest request, RequestContext context, CancellationToken cancellationToken)
     {

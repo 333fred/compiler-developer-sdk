@@ -5,7 +5,6 @@ using System.Runtime.Serialization;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
@@ -73,7 +72,7 @@ sealed class SyntaxNodeInfoService : AbstractCompilerDeveloperSdkLspServiceDocum
 
     public override bool RequiresLSPSolution => true;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(SyntaxNodeInfoRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(SyntaxNodeInfoRequest request) => request.TextDocument.Uri;
 
     public override async Task<SyntaxNodeInfoResponse?> HandleRequestAsync(SyntaxNodeInfoRequest request, RequestContext context, CancellationToken cancellationToken)
     {

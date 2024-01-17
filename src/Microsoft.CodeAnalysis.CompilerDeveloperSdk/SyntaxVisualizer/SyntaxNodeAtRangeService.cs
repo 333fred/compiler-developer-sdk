@@ -2,7 +2,6 @@ using System.Composition;
 using System.Diagnostics;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 using SyntaxNodeAtRangeResponse = Microsoft.CodeAnalysis.CompilerDeveloperSdk.NodeAtRangeResponse<Microsoft.CodeAnalysis.CompilerDeveloperSdk.SyntaxTreeNode>;
 
@@ -22,7 +21,7 @@ sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDo
 
     public override bool RequiresLSPSolution => true;
 
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(NodeAtRangeRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(NodeAtRangeRequest request) => request.TextDocument.Uri;
 
     public override async Task<SyntaxNodeAtRangeResponse> HandleRequestAsync(NodeAtRangeRequest request, RequestContext context, CancellationToken cancellationToken)
     {

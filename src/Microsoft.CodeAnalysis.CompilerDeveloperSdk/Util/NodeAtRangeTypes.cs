@@ -1,8 +1,7 @@
 using System.Runtime.Serialization;
 
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
-using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
+using LSP = Roslyn.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
@@ -39,7 +38,7 @@ sealed class IOperationNodeParentService : AbstractCompilerDeveloperSdkLspServic
 
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(IOperationNodeParentRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(IOperationNodeParentRequest request) => request.TextDocument.Uri;
 
     public override async Task<IOperationParentResponse> HandleRequestAsync(IOperationNodeParentRequest request, RequestContext context, CancellationToken cancellationToken)
     {

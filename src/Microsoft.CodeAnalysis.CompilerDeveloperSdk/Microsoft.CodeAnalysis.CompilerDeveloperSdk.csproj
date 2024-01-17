@@ -11,8 +11,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.CommonLanguageServerProtocol.Framework"
-      ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.CodeAnalysis.LanguageServer.Protocol" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.CommonLanguageServerProtocol.Framework" ExcludeAssets="runtime" />
+
     <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" ExcludeAssets="runtime" GeneratePathProperty="true" />
   </ItemGroup>
 

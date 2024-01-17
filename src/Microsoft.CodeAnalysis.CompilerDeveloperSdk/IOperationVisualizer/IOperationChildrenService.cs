@@ -4,12 +4,11 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
-sealed class IOperationChildrenRequest : ITextDocumentParams
+sealed class IOperationChildrenRequest
 {
     [DataMember(Name = "textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
@@ -33,7 +32,7 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
 
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
-    public override TextDocumentIdentifier GetTextDocumentIdentifier(IOperationChildrenRequest request) => request.TextDocument;
+    public override Uri GetTextDocumentIdentifier(IOperationChildrenRequest request) => request.TextDocument.Uri;
 
     public override async Task<IOperationTreeResponse> HandleRequestAsync(IOperationChildrenRequest request, RequestContext context, CancellationToken cancellationToken)
     {

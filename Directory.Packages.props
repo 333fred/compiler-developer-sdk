@@ -3,10 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NoWarn>NU1507</NoWarn>
 
-    <MicrosoftCodeAnalysisVersion>4.8.0-1.23419.1</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.10.0-1.24067.1</MicrosoftCodeAnalysisVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.LanguageServer.Protocol" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CommonLanguageServerProtocol.Framework" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" Version="$(MicrosoftCodeAnalysisVersion)" />
   </ItemGroup>
