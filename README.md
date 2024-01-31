@@ -33,6 +33,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.3.0
+
+* Update to react to breaking changes in the C# extension APIs.
+
 ### 0.2.0
 
 * Added IOperation Visualization support. You can now view IOperation nodes similarly to how you view syntax nodes, with a new dedicated view
