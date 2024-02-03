@@ -15,17 +15,20 @@
     <PackageReference Include="Microsoft.CommonLanguageServerProtocol.Framework" ExcludeAssets="runtime" />
 
     <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" ExcludeAssets="runtime" GeneratePathProperty="true" />
+    <PackageReference Include="ICSharpCode.Decompiler" ExcludeAssets="runtime" GeneratePathProperty="true" />
   </ItemGroup>
 
   <Target Name="VscePrepublish"
     DependsOnTargets="Build"
     Inputs="$(TargetPath));
-            $(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)"
+            $(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)
+            $(PkgICSharpCode_Decompiler)"
     Outputs="$(MSBuildThisFileDirectory)..\..\dist\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;
-             $(MSBuildThisFileDirectory)..\..\dist\Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll">
+             $(MSBuildThisFileDirectory)..\..\dist\Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll
+             $(MSBuildThisFileDirectory)..\..\dist\ICSharpCode.Decompiler.dll">
 
     <Copy
-        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net7.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll"
+        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net7.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
         DestinationFolder="$(MSBuildThisFileDirectory)..\..\dist">
     </Copy>
   </Target>

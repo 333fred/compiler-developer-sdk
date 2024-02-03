@@ -10,5 +10,6 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.LanguageServer.Protocol" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CommonLanguageServerProtocol.Framework" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
   </ItemGroup>
 </Project>
