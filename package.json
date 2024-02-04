@@ -3,7 +3,7 @@
     "displayName": ".NET Compiler Developer SDK",
     "publisher": "333fred",
     "description": "VS Code extension for working with and on the Roslyn compiler.",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "icon": "images/roslyn_icon_color.png",
     "repository": {
         "type": "git",
@@ -23,7 +23,9 @@
     ],
     "main": "./dist/extension.js",
     "contributes": {
-        "csharpExtensionLoadPaths": ["Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"],
+        "csharpExtensionLoadPaths": [
+            "Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"
+        ],
         "viewsContainers": {
             "activitybar": [
                 {
@@ -39,13 +41,13 @@
                     "id": "syntaxTree",
                     "name": "Syntax Tree",
                     "type": "tree",
-                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
+                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer && compilerDeveloperSdk.loaded"
                 },
                 {
                     "id": "operationTree",
                     "name": "IOperation Tree",
                     "type": "tree",
-                    "when": "config.compilerDeveloperSdk.enableIOperationVisualizer"
+                    "when": "config.compilerDeveloperSdk.enableIOperationVisualizer && compilerDeveloperSdk.loaded"
                 }
             ]
         },
@@ -79,6 +81,10 @@
                 "command": "compilerDeveloperSdk.collapseIOperationVisualizer",
                 "title": "Collapse IOperation Visualizer",
                 "icon": "$(collapse-all)"
+            },
+            {
+                "command": "compilerDeveloperSdk.decompileContainingContext",
+                "title": "Decompile Containing C# Context"
             }
         ],
         "menus": {
@@ -102,6 +108,13 @@
                     "command": "compilerDeveloperSdk.highlightOnClickIOperation",
                     "when": "view == operationTree",
                     "group": "navigation"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "compilerDeveloperSdk.decompileContainingContext",
+                    "when": "editorLangId == csharp && compilerDeveloperSdk.loaded",
+                    "group": "compilerDeveloperSdk"
                 }
             ]
         },
