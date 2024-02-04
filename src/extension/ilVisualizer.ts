@@ -27,6 +27,7 @@ export function onActivate(context: vscode.ExtensionContext, csharpExtension: CS
         const response = await csharpExtension.experimental.sendServerRequest(ilForContainingTypeRequest, { textDocument, position }, lsp.CancellationToken.None);
         logger.log("Decompilation complete");
         logger.log(response.decompiledSource ?? "No decompiled source");
+        logger.log(response.il ?? "No IL");
     }
 }
 

@@ -5,6 +5,7 @@ using System.Text;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
 
 using Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk;
@@ -80,28 +81,7 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
         // Start up emit as we find what method to decompile so we're not waiting as long on it later.
         var compilationResultTask = Task.Run(() => compilation.Emit(ilStream, pdbStream, cancellationToken: cts.Token));
 
-        var linePosition = ProtocolConversions.PositionToLinePosition(request.Position);
-        var sourceText = await document.GetTextAsync(cancellationToken);
-        var position = sourceText.Lines.GetPosition(linePosition);
-
-        var tree = await document.GetSyntaxTreeAsync(cts.Token);
-        var node = (await tree!.GetRootAsync(cancellationToken)).FindToken(position).Parent;
-        var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
-        Debug.Assert(semanticModel is not null);
-
-        ISymbol? declaredSymbol = null;
-
-        for (; node is not null; node = node.Parent)
-        {
-            if (semanticModel.GetDeclaredSymbol(node, cancellationToken: cts.Token) is ISymbol
-                {
-                    Kind: SymbolKind.Method or SymbolKind.Property or SymbolKind.Field or SymbolKind.NamedType or SymbolKind.Event
-                } symbol)
-            {
-                declaredSymbol = symbol;
-                break;
-            }
-        }
+        ISymbol? declaredSymbol = await FindContext(request, cts, document, cancellationToken);
 
         if (declaredSymbol is null)
         {
@@ -122,6 +102,8 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
             };
         }
 
+        ISymbol? typeOrAssemblyContext = declaredSymbol as INamedTypeSymbol ?? (ISymbol)declaredSymbol.ContainingType ?? (IAssemblySymbol)declaredSymbol;
+
         // Wait for emit to finish
         var emitResult = await compilationResultTask;
         if (!emitResult.Success)
@@ -137,26 +119,56 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
 
         ilStream.Position = 0;
         var peFile = new PEFile("", ilStream);
-        var decompiler = new CSharpDecompiler(peFile, new CompilationAssemblyResolver(compilation), DecompilerSettings);
-        var decompiledCSharp = decompiler.DecompileTypeAsString(new ICSharpCode.Decompiler.TypeSystem.FullTypeName(GetMetadataName(declaredSymbol)));
+        string decompiledCSharp = DecompileIl(compilation, typeOrAssemblyContext, peFile);
+
+        string ilOutput = DisassembleIl(typeOrAssemblyContext, peFile, cancellationToken);
 
         return new()
         {
-            Il = null,
+            Il = ilOutput,
             DecompiledSource = decompiledCSharp,
             Success = true,
             Errors = null
         };
+    }
+
+    private static async Task<ISymbol?> FindContext(IlForContainingSymbolRequest request, CancellationTokenSource cts, Document document, CancellationToken cancellationToken)
+    {
+        var linePosition = ProtocolConversions.PositionToLinePosition(request.Position);
+        var sourceText = await document.GetTextAsync(cancellationToken);
+        var position = sourceText.Lines.GetPosition(linePosition);
+
+        var tree = await document.GetSyntaxTreeAsync(cts.Token);
+        var node = (await tree!.GetRootAsync(cancellationToken)).FindToken(position).Parent;
+        var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+        Debug.Assert(semanticModel is not null);
+
+        for (var currentNode = node; currentNode is not null; currentNode = currentNode.Parent)
+        {
+            if (semanticModel.GetDeclaredSymbol(currentNode, cancellationToken: cts.Token) is ISymbol
+                {
+                    Kind: SymbolKind.Method or SymbolKind.Property or SymbolKind.Field or SymbolKind.NamedType or SymbolKind.Event
+                } symbol)
+            {
+                return symbol;
+            }
+        }
+
+        // Didn't find a type, so we're in a compilation context, so return the containing assembly
+        return semanticModel.Compilation.Assembly;
+    }
+
+    static string DecompileIl(Compilation compilation, ISymbol typeOrAssemblyContext, PEFile peFile)
+    {
+        var decompiler = new CSharpDecompiler(peFile, new CompilationAssemblyResolver(compilation), DecompilerSettings);
+        // TODO: Handle assembly context
+        var decompiledCSharp = decompiler.DecompileTypeAsString(new ICSharpCode.Decompiler.TypeSystem.FullTypeName(GetMetadataName(typeOrAssemblyContext)));
+        return decompiledCSharp;
 
         static string GetMetadataName(ISymbol symbol)
         {
-            if (symbol is not INamedTypeSymbol namedType)
-            {
-                return GetMetadataName(symbol.ContainingType);
-            }
-
             var builder = new StringBuilder();
-            BuildNamedType(namedType, builder);
+            BuildNamedType(symbol, builder);
             return builder.ToString();
 
             static void BuildNamedType(ISymbol symbol, StringBuilder builder)
@@ -185,5 +197,26 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
                 builder.Append(symbol.MetadataName);
             }
         }
+    }
+
+    private static string DisassembleIl(ISymbol containingType, PEFile peFile, CancellationToken cancellationToken)
+    {
+        var ilOutput = new PlainTextOutput();
+        var reflectionDisassembler = new ReflectionDisassembler(ilOutput, cancellationToken);
+
+        var metadataReader = peFile.Metadata;
+        foreach (var typeHandle in metadataReader.TypeDefinitions)
+        {
+            var type = metadataReader.GetTypeDefinition(typeHandle);
+            var typeName = metadataReader.GetString(type.Name);
+            // TODO: Handle disassembling the whole assembly
+            if (typeName == containingType.MetadataName)
+            {
+                reflectionDisassembler.DisassembleType(peFile, typeHandle);
+                break;
+            }
+        }
+
+        return ilOutput.ToString();
     }
 }

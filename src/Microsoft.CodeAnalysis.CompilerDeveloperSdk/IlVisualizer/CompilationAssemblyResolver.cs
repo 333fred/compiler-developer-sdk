@@ -6,7 +6,6 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 sealed class CompilationAssemblyResolver(Compilation compilation) : IAssemblyResolver
 {
-    private readonly Compilation _compilation = compilation;
     private readonly FrozenDictionary<string, MetadataReference> _metadataReferences = compilation.References.ToFrozenDictionary(keySelector: r => ((IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(r)!).Name);
 
     public PEFile? Resolve(IAssemblyReference reference)
@@ -25,11 +24,11 @@ sealed class CompilationAssemblyResolver(Compilation compilation) : IAssemblyRes
 
     public PEFile? ResolveModule(PEFile mainModule, string moduleName)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public Task<PEFile?> ResolveModuleAsync(PEFile mainModule, string moduleName)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 }
