@@ -10,11 +10,9 @@ sealed class CompilationAssemblyResolver(Compilation compilation) : IAssemblyRes
 
     public PEFile? Resolve(IAssemblyReference reference)
     {
-        if (_metadataReferences.TryGetValue(reference.Name, out var metadataReference))
-        {
-            return new PEFile(metadataReference.Display!);
-        }
-        return null;
+        return _metadataReferences.TryGetValue(reference.Name, out var metadataReference)
+            ? File.Exists(metadataReference.Display) ? new PEFile(metadataReference.Display) : null
+            : null;
     }
 
     public Task<PEFile?> ResolveAsync(IAssemblyReference reference)

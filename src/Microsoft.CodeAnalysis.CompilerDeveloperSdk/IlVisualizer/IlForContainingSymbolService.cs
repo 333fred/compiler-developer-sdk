@@ -25,13 +25,22 @@ sealed class IlForContainingSymbolRequest
 sealed class IlForContainingSymbolResponse
 {
     [DataMember(Name = "il")]
-    public required string? Il { get; init; }
-    [DataMember(Name = "decompiledSource")]
-    public required string? DecompiledSource { get; init; }
+    public required IlForContainingSymbol? Il { get; init; }
     [DataMember(Name = "success")]
     public required bool Success { get; init; }
     [DataMember(Name = "errors")]
     public required string? Errors { get; init; }
+}
+
+[DataContract]
+sealed class IlForContainingSymbol
+{
+    [DataMember(Name = "fullSymbolName")]
+    public required string FullSymbolName { get; init; }
+    [DataMember(Name = "il")]
+    public required string Il { get; init; }
+    [DataMember(Name = "decompiledSource")]
+    public required string DecompiledSource { get; init; }
 }
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(IlForContainingSymbolService)), Shared]
@@ -57,6 +66,8 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
         FunctionPointers = true,
         NativeIntegers = true
     };
+
+    private static readonly SymbolDisplayFormat FullyQualifiedWithoutGlobal = SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
 
     [ImportingConstructor]
     [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
@@ -96,7 +107,6 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
             return new()
             {
                 Il = null,
-                DecompiledSource = null,
                 Success = false,
                 Errors = "Could not find a containing context for the given position"
             };
@@ -111,7 +121,6 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
             return new()
             {
                 Il = null,
-                DecompiledSource = null,
                 Success = false,
                 Errors = string.Join(Environment.NewLine, emitResult.Diagnostics.Select(d => d.ToString()))
             };
@@ -125,8 +134,12 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
 
         return new()
         {
-            Il = ilOutput,
-            DecompiledSource = decompiledCSharp,
+            Il = new()
+            {
+                FullSymbolName = typeOrAssemblyContext.ToDisplayString(FullyQualifiedWithoutGlobal),
+                Il = ilOutput,
+                DecompiledSource = decompiledCSharp
+            },
             Success = true,
             Errors = null
         };
@@ -175,7 +188,7 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
             {
                 if (symbol is INamespaceSymbol namespaceSymbol)
                 {
-                    builder.Append(namespaceSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)));
+                    builder.Append(namespaceSymbol.ToDisplayString(FullyQualifiedWithoutGlobal));
                     return;
                 }
 
