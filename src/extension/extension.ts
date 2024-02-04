@@ -5,7 +5,7 @@ import { CSharpExtension } from './csharpExtensionExports';
 import { createSyntaxVisualizerProvider } from './syntaxVisualizerProvider';
 import { createLogger } from './logger';
 import { createOperationVisualizerProvider } from './operationVisualizerProvider';
-import { onActivate } from './ilVisualizer';
+import { createIlVisualizer } from './ilVisualizer';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -31,8 +31,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(...[
         ...createSyntaxVisualizerProvider(csharpExtension, logger),
-        ...createOperationVisualizerProvider(csharpExtension, logger)]);
-    onActivate(context, csharpExtension, logger);
+        ...createOperationVisualizerProvider(csharpExtension, logger),
+        ...createIlVisualizer(csharpExtension, logger),]);
+
+    vscode.commands.executeCommand('setContext', 'compilerDeveloperSdk.loaded', true);
 }
 
 // This method is called when your extension is deactivated

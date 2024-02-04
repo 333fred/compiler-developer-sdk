@@ -41,13 +41,13 @@
                     "id": "syntaxTree",
                     "name": "Syntax Tree",
                     "type": "tree",
-                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer"
+                    "when": "config.compilerDeveloperSdk.enableSyntaxVisualizer && compilerDeveloperSdk.loaded"
                 },
                 {
                     "id": "operationTree",
                     "name": "IOperation Tree",
                     "type": "tree",
-                    "when": "config.compilerDeveloperSdk.enableIOperationVisualizer"
+                    "when": "config.compilerDeveloperSdk.enableIOperationVisualizer && compilerDeveloperSdk.loaded"
                 }
             ]
         },
@@ -113,8 +113,8 @@
             "editor/context": [
                 {
                     "command": "compilerDeveloperSdk.decompileContainingContext",
-                    "when": "editorLangId == csharp",
-                    "group": "navigation"
+                    "when": "editorLangId == csharp && compilerDeveloperSdk.loaded",
+                    "group": "compilerDeveloperSdk"
                 }
             ]
         },

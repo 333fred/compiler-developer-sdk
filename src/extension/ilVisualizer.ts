@@ -5,12 +5,10 @@ import { CSharpExtension } from './csharpExtensionExports';
 
 const commandId = "compilerDeveloperSdk.decompileContainingContext";
 
-
-export function onActivate(context: vscode.ExtensionContext, csharpExtension: CSharpExtension, logger: Logger) {
+export function createIlVisualizer(csharpExtension: CSharpExtension, logger: Logger): vscode.Disposable[] {
     logger.log("IL Visualizer activated");
     const ilContentProvider = new IlVisualizerDocumentProvider();
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(scheme, ilContentProvider));
-    context.subscriptions.push(vscode.commands.registerCommand(commandId, decompileIl));
+    return [vscode.workspace.registerTextDocumentContentProvider(scheme, ilContentProvider), vscode.commands.registerCommand(commandId, decompileIl)];
 
     async function decompileIl(): Promise<void> {
         logger.log("Decompiling IL");
