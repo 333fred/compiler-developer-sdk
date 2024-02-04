@@ -23,7 +23,9 @@
     ],
     "main": "./dist/extension.js",
     "contributes": {
-        "csharpExtensionLoadPaths": ["Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"],
+        "csharpExtensionLoadPaths": [
+            "Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"
+        ],
         "viewsContainers": {
             "activitybar": [
                 {
@@ -79,6 +81,10 @@
                 "command": "compilerDeveloperSdk.collapseIOperationVisualizer",
                 "title": "Collapse IOperation Visualizer",
                 "icon": "$(collapse-all)"
+            },
+            {
+                "command": "compilerDeveloperSdk.decompileContainingContext",
+                "title": "Decompile Containing C# Context"
             }
         ],
         "menus": {
@@ -101,6 +107,13 @@
                 {
                     "command": "compilerDeveloperSdk.highlightOnClickIOperation",
                     "when": "view == operationTree",
+                    "group": "navigation"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "compilerDeveloperSdk.decompileContainingContext",
+                    "when": "editorLangId == csharp",
                     "group": "navigation"
                 }
             ]

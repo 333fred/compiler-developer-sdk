@@ -5,12 +5,13 @@ import { CSharpExtension } from './csharpExtensionExports';
 import { createSyntaxVisualizerProvider } from './syntaxVisualizerProvider';
 import { createLogger } from './logger';
 import { createOperationVisualizerProvider } from './operationVisualizerProvider';
+import { onActivate } from './ilVisualizer';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-    var output = vscode.window.createOutputChannel(".NET Compiler Developer SDK");
-    var logger = createLogger(output);
+    const output = vscode.window.createOutputChannel(".NET Compiler Developer SDK");
+    const logger = createLogger(output);
     logger.log("Extension activated");
 
     const csharpExtension = vscode.extensions.getExtension('ms-dotnettools.csharp')?.exports as CSharpExtension;
@@ -29,6 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(...[
         ...createSyntaxVisualizerProvider(csharpExtension, logger),
         ...createOperationVisualizerProvider(csharpExtension, logger)]);
+    onActivate(context, csharpExtension, logger);
 }
 
 // This method is called when your extension is deactivated

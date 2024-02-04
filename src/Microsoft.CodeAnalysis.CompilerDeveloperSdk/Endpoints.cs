@@ -11,4 +11,6 @@ static class Endpoints
     public const string IOperationChildren = "operationTree/operationChildren";
     public const string IOperationNodeAtRange = "operationTree/nodeAtRange";
     public const string IOperationNodeParent = "operationTree/parentNode";
+
+    public const string IlForContainingSymbol = "il/containingSymbol";
 }
