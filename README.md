@@ -16,6 +16,15 @@ Visualize the symbol and IOperation trees in a C# file live, as you type, and na
 
 ![IOperation visualizer demonstration](./images/IOperationVisualizerDemo.gif)
 
+### IL and C# Decompilation
+
+Visualize the IL and decompiled C# for your code live in the editor. The decompiled C# view shows a much lower-level than most C#: for example, async state machines
+are decompiled
+
+![IL Visualizer demonstration](./images//IlVisualizerDemo.gif)
+
+Big thanks to @ashmind and [Sharplab.io](https://sharplab.io) for both the idea and some of the settings for ICsharpCode.Decompiler!
+
 ## Requirements
 
 This extension depends on the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp).
@@ -30,8 +39,14 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 ## Known Issues
 
 * Top-level statements reveal in the IOperation tree isn't always as specific as it could be.
+* Attempting to use the IL visualizer outside of a method or type causes an error.
+* Metadata from references that aren't on disk (like other projects) is not found during decompilation.
 
 ## Release Notes
+
+### 0.4.0
+
+* Add initial build of IL Visualization
 
 ### 0.3.0
 
