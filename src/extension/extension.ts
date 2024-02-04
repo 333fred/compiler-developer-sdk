@@ -23,7 +23,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     logger.log("C# extension found, waiting for initialization to complete");
 
-    await csharpExtension.initializationFinished();
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: "Initializing .NET Compiler Developer SDK" }, () => {
+        return csharpExtension.initializationFinished();
+    });
 
     logger.log("C# extension initialization complete. Activating SyntaxVisualizer.");
 

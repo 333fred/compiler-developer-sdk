@@ -27,8 +27,9 @@ export function onActivate(context: vscode.ExtensionContext, csharpExtension: CS
         const position = lsp.Position.create(vscodePosition.line, vscodePosition.character);
 
         try {
-
-            const response = await csharpExtension.experimental.sendServerRequest(ilForContainingTypeRequest, { textDocument, position }, lsp.CancellationToken.None);
+            const response = await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: "Decompiling IL" }, (_, token) => {
+                return csharpExtension.experimental.sendServerRequest(ilForContainingTypeRequest, { textDocument, position }, token);
+            });
             logger.log("Decompilation complete");
             if (response.success) {
                 ilContentProvider.updateContext(response.il!);
