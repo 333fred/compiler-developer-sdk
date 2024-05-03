@@ -44,6 +44,11 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.1
+
+* Update to the latest Roslyn versions
+* Always send absolute paths to react to a Roslyn change.
+
 ### 0.4.0
 
 * Add initial build of IL Visualization
