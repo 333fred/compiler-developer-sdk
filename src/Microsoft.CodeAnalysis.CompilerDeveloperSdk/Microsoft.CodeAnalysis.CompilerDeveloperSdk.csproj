@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
@@ -12,7 +12,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.CodeAnalysis.LanguageServer.Protocol" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.CommonLanguageServerProtocol.Framework" ExcludeAssets="runtime" />
 
     <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" ExcludeAssets="runtime" GeneratePathProperty="true" />
     <PackageReference Include="ICSharpCode.Decompiler" ExcludeAssets="runtime" GeneratePathProperty="true" />
@@ -28,7 +27,7 @@
              $(MSBuildThisFileDirectory)..\..\dist\ICSharpCode.Decompiler.dll">
 
     <Copy
-        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net7.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
+        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net8.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
         DestinationFolder="$(MSBuildThisFileDirectory)..\..\dist">
     </Copy>
   </Target>

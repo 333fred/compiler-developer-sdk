@@ -99,7 +99,7 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
             // Could not find a containing context
             try
             {
-                cts.Cancel();
+                await cts.CancelAsync();
                 await compilationResultTask;
             }
             catch (OperationCanceledException) { }

@@ -17,7 +17,7 @@ export function createSyntaxVisualizerProvider(csharpExtension: CSharpExtension,
             const range: lsp.Range = lsp.Range.create(
                 lsp.Position.create(firstSelection.start.line, firstSelection.start.character),
                 lsp.Position.create(firstSelection.end.line, firstSelection.end.character));
-            const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.fileName);
+            const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.uri.toString());
             const response = await csharpExtension.experimental.sendServerRequest(syntaxNodeAtRangeRequest, { textDocument, range }, lsp.CancellationToken.None);
 
             if (!response || !response.node) {
@@ -130,7 +130,7 @@ class SyntaxTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Di
         if (!element || element.kind === 'SyntaxTreeNodeAndFile') {
             let identifier: lsp.TextDocumentIdentifier;
             if (!element) {
-                const activeDoc = vscode.window.activeTextEditor?.document.uri.fsPath;
+                const activeDoc = vscode.window.activeTextEditor?.document.uri.toString();
 
                 if (!activeDoc || !activeDoc.endsWith(".cs")) {
                     // Not a C# file, don't display anything
