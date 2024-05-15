@@ -9,20 +9,20 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class IOperationNodeParentRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "childSymbolId")]
+    [DataMember(Name = "childSymbolId"), JsonPropertyName("childSymbolId")]
     public required int ChildSymbolId { get; init; }
-    [DataMember(Name = "childIOperationId")]
+    [DataMember(Name = "childIOperationId"), JsonPropertyName("childIOperationId")]
     public required int? ChildIOperationId { get; init; }
 }
 
 [DataContract]
 sealed class IOperationParentResponse : NodeParentResponse<IOperationTreeNode>
 {
-    [DataMember(Name = "parentOperationPropertyName")]
+    [DataMember(Name = "parentOperationPropertyName"), JsonPropertyName("parentOperationPropertyName")]
     public string? ParentOperationPropertyName { get; init; }
-    [DataMember(Name = "isArray")]
+    [DataMember(Name = "isArray"), JsonPropertyName("isArray")]
     public bool IsArray { get; init; }
 }
 

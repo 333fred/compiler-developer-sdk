@@ -11,50 +11,50 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class SyntaxNodeInfoRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "node")]
+    [DataMember(Name = "node"), JsonPropertyName("node")]
     public required SyntaxTreeNode Node { get; init; }
 }
 
 [DataContract]
 sealed class SyntaxNodeInfoResponse
 {
-    [DataMember(Name = "nodeType")]
+    [DataMember(Name = "nodeType"), JsonPropertyName("nodeType")]
     public SymbolAndKind NodeType { get; set; }
-    [DataMember(Name = "nodeSyntaxKind")]
+    [DataMember(Name = "nodeSyntaxKind"), JsonPropertyName("nodeSyntaxKind")]
     public required string NodeSyntaxKind { get; set; }
-    [DataMember(Name = "semanticClassification")]
+    [DataMember(Name = "semanticClassification"), JsonPropertyName("semanticClassification")]
     public string? SemanticClassification { get; set; }
-    [DataMember(Name = "nodeSymbolInfo")]
+    [DataMember(Name = "nodeSymbolInfo"), JsonPropertyName("nodeSymbolInfo")]
     public NodeSymbolInfo? NodeSymbolInfo { get; set; }
-    [DataMember(Name = "nodeTypeInfo")]
+    [DataMember(Name = "nodeTypeInfo"), JsonPropertyName("nodeTypeInfo")]
     public NodeTypeInfo? NodeTypeInfo { get; set; }
-    [DataMember(Name = "nodeDeclaredSymbol")]
+    [DataMember(Name = "nodeDeclaredSymbol"), JsonPropertyName("nodeDeclaredSymbol")]
     public SymbolAndKind NodeDeclaredSymbol { get; set; } = SymbolAndKind.Null;
-    [DataMember(Name = "properties")]
+    [DataMember(Name = "properties"), JsonPropertyName("properties")]
     public required ImmutableDictionary<string, string> Properties { get; set; }
 }
 
 [DataContract]
 sealed class NodeSymbolInfo
 {
-    [DataMember(Name = "symbol")]
+    [DataMember(Name = "symbol"), JsonPropertyName("symbol")]
     public SymbolAndKind Symbol { get; set; }
-    [DataMember(Name = "candidateReason")]
+    [DataMember(Name = "candidateReason"), JsonPropertyName("candidateReason")]
     public required string CandidateReason { get; set; }
-    [DataMember(Name = "candidateSymbols")]
+    [DataMember(Name = "candidateSymbols"), JsonPropertyName("candidateSymbols")]
     public ImmutableArray<SymbolAndKind> CandidateSymbols { get; set; }
 }
 
 [DataContract]
 sealed class NodeTypeInfo
 {
-    [DataMember(Name = "type")]
+    [DataMember(Name = "type"), JsonPropertyName("type")]
     public SymbolAndKind Type { get; set; }
-    [DataMember(Name = "convertedType")]
+    [DataMember(Name = "convertedType"), JsonPropertyName("convertedType")]
     public SymbolAndKind ConvertedType { get; set; }
-    [DataMember(Name = "conversion")]
+    [DataMember(Name = "conversion"), JsonPropertyName("conversion")]
     public string? Conversion { get; set; }
 }
 

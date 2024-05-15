@@ -19,7 +19,7 @@ namespace Roslyn.LanguageServer.Protocol
         /// <summary>
         /// Gets or sets the URI of the text document.
         /// </summary>
-        [DataMember(Name = "uri")]
+        [DataMember(Name = "uri"), JsonPropertyName("uri")]
         [JsonConverter(typeof(DocumentUriConverter))]
         public Uri Uri
         {

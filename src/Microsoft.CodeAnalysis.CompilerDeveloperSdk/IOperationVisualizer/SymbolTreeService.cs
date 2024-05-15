@@ -9,16 +9,16 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class SymbolTreeRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "parentSymbolId")]
+    [DataMember(Name = "parentSymbolId"), JsonPropertyName("parentSymbolId")]
     public int? ParentSymbolId { get; init; }
 }
 
 [DataContract]
 sealed class IOperationTreeResponse
 {
-    [DataMember(Name = "nodes")]
+    [DataMember(Name = "nodes"), JsonPropertyName("nodes")]
     public required ImmutableArray<IOperationTreeNode> Nodes { get; init; }
 }
 

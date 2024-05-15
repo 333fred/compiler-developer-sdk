@@ -5,6 +5,6 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 class NodeParentResponse<T>
 {
-    [DataMember(Name = "parent")]
+    [DataMember(Name = "parent"), JsonPropertyName("parent")]
     public T? Parent { get; init; }
 }

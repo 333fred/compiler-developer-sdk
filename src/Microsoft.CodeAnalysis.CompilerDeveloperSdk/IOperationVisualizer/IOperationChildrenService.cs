@@ -10,13 +10,13 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class IOperationChildrenRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "parentSymbolId")]
+    [DataMember(Name = "parentSymbolId"), JsonPropertyName("parentSymbolId")]
     public int ParentSymbolId { get; init; }
-    [DataMember(Name = "parentIOperationId")]
+    [DataMember(Name = "parentIOperationId"), JsonPropertyName("parentIOperationId")]
     public int? ParentIOperationId { get; init; }
-    [DataMember(Name = "parentIOperationPropertyName")]
+    [DataMember(Name = "parentIOperationPropertyName"), JsonPropertyName("parentIOperationPropertyName")]
     public string? ParentIOperationPropertyName { get; init; }
 }
 
