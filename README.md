@@ -44,6 +44,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.2
+
+* Add System.Text.Json property attributes to model types to react to breaking changes in the C# extension.
+
 ### 0.4.1
 
 * Update to the latest Roslyn versions
