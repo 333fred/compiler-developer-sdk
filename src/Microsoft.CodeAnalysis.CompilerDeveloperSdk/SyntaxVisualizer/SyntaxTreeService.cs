@@ -10,16 +10,16 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class SyntaxTreeRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "parentNodeId")]
+    [DataMember(Name = "parentNodeId"), JsonPropertyName("parentNodeId")]
     public int? ParentNodeId { get; init; }
 }
 
 [DataContract]
 sealed class SyntaxTreeResponse
 {
-    [DataMember(Name = "nodes")]
+    [DataMember(Name = "nodes"), JsonPropertyName("nodes")]
     public required ImmutableArray<SyntaxTreeNode> Nodes { get; init; }
 }
 

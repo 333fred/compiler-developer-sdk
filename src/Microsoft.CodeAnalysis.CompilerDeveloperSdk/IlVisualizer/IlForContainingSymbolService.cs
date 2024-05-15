@@ -15,31 +15,31 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class IlForContainingSymbolRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "position")]
+    [DataMember(Name = "position"), JsonPropertyName("position")]
     public required Position Position { get; init; }
 }
 
 [DataContract]
 sealed class IlForContainingSymbolResponse
 {
-    [DataMember(Name = "il")]
+    [DataMember(Name = "il"), JsonPropertyName("il")]
     public required IlForContainingSymbol? Il { get; init; }
-    [DataMember(Name = "success")]
+    [DataMember(Name = "success"), JsonPropertyName("success")]
     public required bool Success { get; init; }
-    [DataMember(Name = "errors")]
+    [DataMember(Name = "errors"), JsonPropertyName("errors")]
     public required string? Errors { get; init; }
 }
 
 [DataContract]
 sealed class IlForContainingSymbol
 {
-    [DataMember(Name = "fullSymbolName")]
+    [DataMember(Name = "fullSymbolName"), JsonPropertyName("fullSymbolName")]
     public required string FullSymbolName { get; init; }
-    [DataMember(Name = "il")]
+    [DataMember(Name = "il"), JsonPropertyName("il")]
     public required string Il { get; init; }
-    [DataMember(Name = "decompiledSource")]
+    [DataMember(Name = "decompiledSource"), JsonPropertyName("decompiledSource")]
     public required string DecompiledSource { get; init; }
 }
 

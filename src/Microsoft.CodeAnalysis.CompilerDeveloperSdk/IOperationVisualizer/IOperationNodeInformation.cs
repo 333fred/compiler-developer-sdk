@@ -5,21 +5,21 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [DataContract]
 internal readonly record struct OperationChild(
-    [property: DataMember(Name = "name")]
+    [property: DataMember(Name = "name"), JsonPropertyName("name")]
     string Name,
-    [property: DataMember(Name = "isArray")]
+    [property: DataMember(Name = "isArray"), JsonPropertyName("isArray")]
     bool IsArray,
-    [property: DataMember(Name = "isPresent")]
+    [property: DataMember(Name = "isPresent"), JsonPropertyName("isPresent")]
     bool IsPresent);
 
 [DataContract]
 sealed class IOperationNodeInformation
 {
-    [DataMember(Name = "parentInfo")]
+    [DataMember(Name = "parentInfo"), JsonPropertyName("parentInfo")]
     public required OperationChild? ParentInfo { get; init; }
-    [DataMember(Name = "ioperationId")]
+    [DataMember(Name = "ioperationId"), JsonPropertyName("ioperationId")]
     public required int IOperationId { get; init; }
-    [DataMember(Name = "operationChildrenInfo")]
+    [DataMember(Name = "operationChildrenInfo"), JsonPropertyName("operationChildrenInfo")]
     public required ImmutableArray<OperationChild> OperationChildrenInfo { get; init; }
 
     public static IOperationNodeInformation FromOperation(IOperation operation, int operationId, OperationChild? parentInfo, out IReadOnlyDictionary<string, string> properties)

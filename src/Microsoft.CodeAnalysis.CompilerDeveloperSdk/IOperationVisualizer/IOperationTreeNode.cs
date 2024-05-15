@@ -10,19 +10,19 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class IOperationTreeNode
 {
-    [DataMember(Name = "nodeType")]
+    [DataMember(Name = "nodeType"), JsonPropertyName("nodeType")]
     public required SymbolAndKind NodeType { get; init; }
-    [DataMember(Name = "range")]
+    [DataMember(Name = "range"), JsonPropertyName("range")]
     public required LSP.Range Range { get; init; }
-    [DataMember(Name = "hasSymbolChildren")]
+    [DataMember(Name = "hasSymbolChildren"), JsonPropertyName("hasSymbolChildren")]
     public required bool HasSymbolChildren { get; init; }
-    [DataMember(Name = "hasIOperationChildren")]
+    [DataMember(Name = "hasIOperationChildren"), JsonPropertyName("hasIOperationChildren")]
     public required bool HasIOperationChildren { get; init; }
-    [DataMember(Name = "symbolId")]
+    [DataMember(Name = "symbolId"), JsonPropertyName("symbolId")]
     public required int SymbolId { get; init; }
-    [DataMember(Name = "ioperationInfo")]
+    [DataMember(Name = "ioperationInfo"), JsonPropertyName("ioperationInfo")]
     public required IOperationNodeInformation? IOperationInfo { get; init; }
-    [DataMember(Name = "properties")]
+    [DataMember(Name = "properties"), JsonPropertyName("properties")]
     public required IReadOnlyDictionary<string, string>? Properties { get; init; }
 
     public static IOperationTreeNode SymbolToTreeItem(ISymbol? symbol, bool hasIOperationChildren, LinePositionSpan originalLocation, int symbolId, ImmutableArray<int> childIds)

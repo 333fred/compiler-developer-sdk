@@ -10,9 +10,9 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 [DataContract]
 sealed class SyntaxNodeParentRequest
 {
-    [DataMember(Name = "textDocument")]
+    [DataMember(Name = "textDocument"), JsonPropertyName("textDocument")]
     public required TextDocumentIdentifier TextDocument { get; init; }
-    [DataMember(Name = "childId")]
+    [DataMember(Name = "childId"), JsonPropertyName("childId")]
     public required int ChildId { get; init; }
 }
 
