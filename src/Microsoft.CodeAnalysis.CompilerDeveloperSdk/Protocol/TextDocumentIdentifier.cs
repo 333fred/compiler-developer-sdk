@@ -6,7 +6,8 @@ namespace Roslyn.LanguageServer.Protocol
 {
     using System;
     using System.Runtime.Serialization;
-    using Newtonsoft.Json;
+
+    using NewtonsoftJsonConverter = Newtonsoft.Json.JsonConverterAttribute;
 
     /// <summary>
     /// Class which identifies a text document.
@@ -20,7 +21,7 @@ namespace Roslyn.LanguageServer.Protocol
         /// Gets or sets the URI of the text document.
         /// </summary>
         [DataMember(Name = "uri"), JsonPropertyName("uri")]
-        [JsonConverter(typeof(DocumentUriConverter))]
+        [NewtonsoftJsonConverter(typeof(NewtonsoftDocumentUriConverter)), JsonConverter(typeof(DocumentUriConverter))]
         public Uri Uri
         {
             get;

@@ -22,7 +22,7 @@ namespace Roslyn.LanguageServer.Protocol
         /// </summary>
         [DataMember(Name = "start"), JsonPropertyName("start")]
         [JsonProperty(Required = Required.Always)]
-        public Position Start
+        public required Position Start
         {
             get;
             set;
@@ -33,7 +33,7 @@ namespace Roslyn.LanguageServer.Protocol
         /// </summary>
         [DataMember(Name = "end"), JsonPropertyName("end")]
         [JsonProperty(Required = Required.Always)]
-        public Position End
+        public required Position End
         {
             get;
             set;
