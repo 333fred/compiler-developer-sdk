@@ -44,6 +44,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.3
+
+* Skip encoding paths to fix https://github.com/333fred/compiler-developer-sdk/issues/8.
+
 ### 0.4.2
 
 * Add System.Text.Json property attributes to model types to react to breaking changes in the C# extension.
