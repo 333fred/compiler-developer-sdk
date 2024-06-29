@@ -18,7 +18,7 @@ export function createOperationVisualizerProvider(csharpExtension: CSharpExtensi
             const range: lsp.Range = lsp.Range.create(
                 lsp.Position.create(firstSelection.start.line, firstSelection.start.character),
                 lsp.Position.create(firstSelection.end.line, firstSelection.end.character));
-            const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.uri.toString());
+            const textDocument = lsp.TextDocumentIdentifier.create(event.textEditor.document.uri.toString(true));
             const response = await csharpExtension.experimental.sendServerRequest(operationNodeAtRangeRequest, { textDocument, range }, lsp.CancellationToken.None);
 
             if (!response || !response.node) {
@@ -145,7 +145,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         if (!element || element.kind === "symbol") {
             let identifier: lsp.TextDocumentIdentifier;
             if (!element) {
-                const activeDoc = vscode.window.activeTextEditor?.document.uri.toString();
+                const activeDoc = vscode.window.activeTextEditor?.document.uri.toString(true);
 
                 if (!activeDoc || !activeDoc.endsWith(".cs")) {
                     // Not a C# file, don't display anything
