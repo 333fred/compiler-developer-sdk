@@ -44,6 +44,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.4
+
+* Update Roslyn dependencies to fix compat with C# extension version 2.41.
+
 ### 0.4.3
 
 * Skip encoding paths to fix https://github.com/333fred/compiler-developer-sdk/issues/8.
