@@ -10,7 +10,7 @@
         "url": "https://github.com/333fred/compiler-developer-sdk"
     },
     "engines": {
-        "vscode": "^1.75.0"
+        "vscode": "^1.93.0"
     },
     "categories": [
         "Other"
