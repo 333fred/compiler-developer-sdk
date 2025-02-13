@@ -226,6 +226,7 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
                MemberDeclarationSyntax { AttributeLists.Count: > 0 } => true,
                AccessorDeclarationSyntax accessor => accessor.Body is not null || accessor.ExpressionBody is not null,
                ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax } => true,
+               CompilationUnitSyntax when Symbol is IMethodSymbol { Name: WellKnownMemberNames.TopLevelStatementsEntryPointMethodName } => true,
                _ => false
            };
 
@@ -239,7 +240,7 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
         var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
         Debug.Assert(model is not null);
 
-        var syntax = AdjustSyntaxNode(Syntax);
+        var syntax = AdjustSyntaxNode(Syntax, Symbol);
 
         var iopRoot = model.GetOperation(syntax, cancellationToken);
 
@@ -299,11 +300,13 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
 
         return _operationToId.Value;
 
-        static SyntaxNode AdjustSyntaxNode(SyntaxNode syntaxNode)
+        static SyntaxNode AdjustSyntaxNode(SyntaxNode syntaxNode, ISymbol? symbol)
             => syntaxNode switch
             {
                 AccessorDeclarationSyntax accessor => (SyntaxNode?)accessor.Body ?? accessor.ExpressionBody!,
                 ArrowExpressionClauseSyntax { Parent: PropertyDeclarationSyntax, Expression: var expression } => expression,
+                // Top-level statements use the CompilationUnitSyntax as the operation root
+                GlobalStatementSyntax { Parent: CompilationUnitSyntax compilationUnit } when symbol is IMethodSymbol { Name: WellKnownMemberNames.TopLevelStatementsEntryPointMethodName } => compilationUnit,
                 _ => syntaxNode
             };
 
