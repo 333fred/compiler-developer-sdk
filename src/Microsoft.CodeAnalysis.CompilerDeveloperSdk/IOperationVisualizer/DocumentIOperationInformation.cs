@@ -45,7 +45,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         {
             Debug.Assert(node is CompilationUnitSyntax);
 
-            idToSymbol.Add(0, new(node, Symbol: null, ParentId: -1, SymbolId: 0, ChildIds: ImmutableArray<int>.Empty));
+            idToSymbol.Add(0, new(node, Symbol: null, ParentId: -1, SymbolId: 0, ChildIds: []));
             syntaxToId.Add(node, 0);
 
             if (semanticModel.GetDeclaredSymbol(node) is { } tlsSymbol)
@@ -182,7 +182,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         private void StoreInfo(ISymbol symbol, SyntaxNode syntaxNode)
         {
             var symbolId = _nextId++;
-            var syntaxAndSymbol = new SyntaxAndSymbol(syntaxNode, symbol, _parentId, symbolId, ImmutableArray<int>.Empty);
+            var syntaxAndSymbol = new SyntaxAndSymbol(syntaxNode, symbol, _parentId, symbolId, []);
 
             idToSymbol[symbolId] = syntaxAndSymbol;
             var parent = idToSymbol[_parentId];
@@ -205,8 +205,8 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
 
 record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
 {
-    private static readonly StrongBox<IOperationChildren> s_empty = new(new(ImmutableDictionary<IOperation, (int, string?, bool)>.Empty, ImmutableDictionary<int, (IOperation, string?)>.Empty, ImmutableArray<int>.Empty));
-    private static readonly ImmutableArray<int> s_noAttributes = ImmutableArray.Create(0);
+    private static readonly StrongBox<IOperationChildren> s_empty = new(new(ImmutableDictionary<IOperation, (int, string?, bool)>.Empty, ImmutableDictionary<int, (IOperation, string?)>.Empty, []));
+    private static readonly ImmutableArray<int> s_noAttributes = [0];
 
     private StrongBox<IOperationChildren>? _operationToId = null;
 
@@ -271,7 +271,7 @@ record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int Sym
         }
         else
         {
-            roots = ImmutableArray<int>.Empty;
+            roots = [];
         }
 
 
@@ -342,13 +342,9 @@ readonly record struct IOperationChildren(IReadOnlyDictionary<IOperation, (int I
 sealed class IOperationVisualizerCache : VisualizerCache<DocumentIOperationInformation>;
 
 [ExportCompilerDeveloperSdkLspServiceFactory(typeof(IOperationVisualizerCache)), Shared]
-sealed class IOperationVisualizerCacheFactory : AbstractCompilerDeveloperSdkLspServiceFactory
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class IOperationVisualizerCacheFactory() : AbstractCompilerDeveloperSdkLspServiceFactory
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public IOperationVisualizerCacheFactory()
-    {
-    }
-
     public override AbstractCompilerDeveloperSdkLspService CreateILspService(CompilerDeveloperSdkLspServices lspServices) => new IOperationVisualizerCache();
 }

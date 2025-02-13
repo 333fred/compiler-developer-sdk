@@ -22,14 +22,10 @@ sealed class IOperationChildrenRequest
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(IOperationChildrenService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.IOperationChildren)]
-sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IOperationChildrenRequest, IOperationTreeResponse>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class IOperationChildrenService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IOperationChildrenRequest, IOperationTreeResponse>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public IOperationChildrenService()
-    {
-    }
-
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
     public override Uri GetTextDocumentIdentifier(IOperationChildrenRequest request) => request.TextDocument.Uri;
@@ -49,7 +45,7 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
 
         if (operationToId == null)
         {
-            return new() { Nodes = ImmutableArray.Create<IOperationTreeNode>() };
+            return new() { Nodes = [] };
         }
 
         Debug.Assert(idToOperation != null);
@@ -62,29 +58,29 @@ sealed class IOperationChildrenService : AbstractCompilerDeveloperSdkLspServiceD
                 var operationChildren = IOperationNodeInformation.GetOperationChildrenForName(request.ParentIOperationPropertyName, parentOperation.Operation);
                 return new()
                 {
-                    Nodes = operationChildren.Select(o =>
+                    Nodes = [.. operationChildren.Select(o =>
                     {
                         var (id, parentName, parentIsArray) = operationToId[o];
                         Debug.Assert(parentName is not null);
                         var parentInfo = new OperationChild(parentName, parentIsArray, IsPresent: true);
                         return o.ToTreeNode(request.ParentSymbolId, id, parentInfo, text);
-                    }).ToImmutableArray()
+                    })]
                 };
             }
             else
             {
-                return new() { Nodes = ImmutableArray.Create<IOperationTreeNode>() };
+                return new() { Nodes = [] };
             }
         }
         else
         {
             return new()
             {
-                Nodes = roots.Select(r =>
+                Nodes = [.. roots.Select(r =>
                 {
                     (IOperation operation, string? parentName) = idToOperation[r];
                     return operation.ToTreeNode(request.ParentSymbolId, r, parentInfo: null, text);
-                }).ToImmutableArray()
+                })]
             };
         }
 

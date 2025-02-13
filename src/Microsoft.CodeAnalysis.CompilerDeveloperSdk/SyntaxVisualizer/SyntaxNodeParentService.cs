@@ -18,14 +18,10 @@ sealed class SyntaxNodeParentRequest
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeParentService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxNodeParent)]
-sealed class SyntaxNodeParentService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeParentRequest, NodeParentResponse<SyntaxTreeNode>>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class SyntaxNodeParentService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeParentRequest, NodeParentResponse<SyntaxTreeNode>>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public SyntaxNodeParentService()
-    {
-    }
-
     public override bool MutatesSolutionState => false;
 
     public override bool RequiresLSPSolution => true;

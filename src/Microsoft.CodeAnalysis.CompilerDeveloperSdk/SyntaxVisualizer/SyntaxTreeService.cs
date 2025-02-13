@@ -25,14 +25,10 @@ sealed class SyntaxTreeResponse
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxTreeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxTree)]
-sealed class SyntaxTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxTreeRequest, SyntaxTreeResponse>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class SyntaxTreeService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxTreeRequest, SyntaxTreeResponse>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public SyntaxTreeService()
-    {
-    }
-
     public override bool MutatesSolutionState => false;
 
     public override bool RequiresLSPSolution => true;
@@ -52,13 +48,13 @@ sealed class SyntaxTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentR
 
         return request.ParentNodeId switch
         {
-            null => new SyntaxTreeResponse { Nodes = ImmutableArray.Create(SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], text, nodeId: 0)) },
+            null => new SyntaxTreeResponse { Nodes = [SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(cacheEntry.NodeMap[0], text, nodeId: 0)] },
             int parentId when cacheEntry.NodeMap.TryGetValue(parentId, out var parentItem) =>
                 new SyntaxTreeResponse
                 {
-                    Nodes = parentItem.GetChildren().Select(s => SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(s, text, cacheEntry.IdMap[s])).ToImmutableArray()
+                    Nodes = [.. parentItem.GetChildren().Select(s => SyntaxTreeNode.NodeOrTokenOrTriviaToTreeItem(s, text, cacheEntry.IdMap[s]))]
                 },
-            _ => new SyntaxTreeResponse { Nodes = ImmutableArray<SyntaxTreeNode>.Empty }
+            _ => new SyntaxTreeResponse { Nodes = [] }
         };
     }
 }

@@ -60,14 +60,10 @@ sealed class NodeTypeInfo
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeInfoService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxTreeNodeInfo)]
-sealed class SyntaxNodeInfoService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse?>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class SyntaxNodeInfoService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SyntaxNodeInfoRequest, SyntaxNodeInfoResponse?>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public SyntaxNodeInfoService()
-    {
-    }
-
     public override bool MutatesSolutionState => false;
 
     public override bool RequiresLSPSolution => true;
@@ -123,7 +119,7 @@ sealed class SyntaxNodeInfoService : AbstractCompilerDeveloperSdkLspServiceDocum
                 response.NodeSymbolInfo = new NodeSymbolInfo
                 {
                     Symbol = GetSymbolAndKind(symbolInfo.Symbol, model, node.SpanStart),
-                    CandidateSymbols = symbolInfo.CandidateSymbols.Select(s => GetSymbolAndKind(s, model, node.SpanStart)).ToImmutableArray(),
+                    CandidateSymbols = [.. symbolInfo.CandidateSymbols.Select(s => GetSymbolAndKind(s, model, node.SpanStart))],
                     CandidateReason = symbolInfo.CandidateReason.ToString()
                 };
             }

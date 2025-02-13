@@ -9,14 +9,10 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(IOperationNodeAtRangeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.IOperationNodeAtRange)]
-sealed class IOperationNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<NodeAtRangeRequest, NodeAtRangeResponse<IOperationTreeNode>?>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class IOperationNodeAtRangeService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<NodeAtRangeRequest, NodeAtRangeResponse<IOperationTreeNode>?>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public IOperationNodeAtRangeService()
-    {
-    }
-
     public override bool RequiresLSPSolution => true;
 
     public override bool MutatesSolutionState => false;

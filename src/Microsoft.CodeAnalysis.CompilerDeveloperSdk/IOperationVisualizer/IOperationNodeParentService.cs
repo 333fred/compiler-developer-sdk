@@ -28,14 +28,10 @@ sealed class IOperationParentResponse : NodeParentResponse<IOperationTreeNode>
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(IOperationNodeParentService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.IOperationNodeParent)]
-sealed class IOperationNodeParentService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IOperationNodeParentRequest, IOperationParentResponse>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class IOperationNodeParentService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IOperationNodeParentRequest, IOperationParentResponse>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public IOperationNodeParentService()
-    {
-    }
-
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
     public override Uri GetTextDocumentIdentifier(IOperationNodeParentRequest request) => request.TextDocument.Uri;

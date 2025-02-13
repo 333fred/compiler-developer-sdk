@@ -45,7 +45,9 @@ sealed class IlForContainingSymbol
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(IlForContainingSymbolService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.IlForContainingSymbol)]
-sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IlForContainingSymbolRequest, IlForContainingSymbolResponse>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class IlForContainingSymbolService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<IlForContainingSymbolRequest, IlForContainingSymbolResponse>
 {
     private static readonly DecompilerSettings DecompilerSettings = new(LanguageVersion.CSharp1)
     {
@@ -68,12 +70,6 @@ sealed class IlForContainingSymbolService : AbstractCompilerDeveloperSdkLspServi
     };
 
     private static readonly SymbolDisplayFormat FullyQualifiedWithoutGlobal = SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
-
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public IlForContainingSymbolService()
-    {
-    }
 
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;

@@ -9,14 +9,10 @@ namespace Microsoft.CodeAnalysis.CompilerDeveloperSdk;
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SyntaxNodeAtRangeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.SyntaxNodeAtRange)]
-sealed class SyntaxNodeAtRangeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<NodeAtRangeRequest, SyntaxNodeAtRangeResponse>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class SyntaxNodeAtRangeService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<NodeAtRangeRequest, SyntaxNodeAtRangeResponse>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public SyntaxNodeAtRangeService()
-    {
-    }
-
     public override bool MutatesSolutionState => false;
 
     public override bool RequiresLSPSolution => true;

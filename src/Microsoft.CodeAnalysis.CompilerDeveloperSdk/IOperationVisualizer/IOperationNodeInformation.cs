@@ -58,8 +58,8 @@ sealed class IOperationNodeInformation
 
         return accessor(parent) switch
         {
-            IOperation operation => ImmutableArray.Create(operation),
-            IEnumerable<IOperation> operations => operations.ToImmutableArray(),
+            IOperation operation => [operation],
+            IEnumerable<IOperation> operations => [.. operations],
             var x => throw new InvalidOperationException($"Property {name} on {parent.GetType()} is not an IOperation or IEnumerable<IOperation>: {x?.GetType().ToString() ?? "<null>"}")
         };
     }

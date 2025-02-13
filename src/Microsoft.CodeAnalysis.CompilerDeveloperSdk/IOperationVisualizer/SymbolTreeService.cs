@@ -24,14 +24,10 @@ sealed class IOperationTreeResponse
 
 [ExportCompilerDeveloperSdkStatelessLspService(typeof(SymbolTreeService)), Shared]
 [CompilerDeveloperSdkMethod(Endpoints.IOperationTree)]
-sealed class SymbolTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SymbolTreeRequest, IOperationTreeResponse>
+[method: ImportingConstructor]
+[method: Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+sealed class SymbolTreeService() : AbstractCompilerDeveloperSdkLspServiceDocumentRequestHandler<SymbolTreeRequest, IOperationTreeResponse>
 {
-    [ImportingConstructor]
-    [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
-    public SymbolTreeService()
-    {
-    }
-
     public override bool RequiresLSPSolution => true;
     public override bool MutatesSolutionState => false;
 
@@ -50,12 +46,12 @@ sealed class SymbolTreeService : AbstractCompilerDeveloperSdkLspServiceDocumentR
         {
             null or -1 => new IOperationTreeResponse
             {
-                Nodes = ImmutableArray.Create(cacheEntry.IdToSymbol[0].ToTreeNode(text))
+                Nodes = [cacheEntry.IdToSymbol[0].ToTreeNode(text)]
             },
             int parentId when cacheEntry.IdToSymbol.TryGetValue(parentId, out var parentItem) =>
                 new IOperationTreeResponse
                 {
-                    Nodes = parentItem.ChildIds.Select(i => cacheEntry.IdToSymbol[i].ToTreeNode(text)).ToImmutableArray()
+                    Nodes = [.. parentItem.ChildIds.Select(i => cacheEntry.IdToSymbol[i].ToTreeNode(text))]
                 },
             _ => throw new ArgumentException("Invalid parent symbol id", nameof(request))
         };
