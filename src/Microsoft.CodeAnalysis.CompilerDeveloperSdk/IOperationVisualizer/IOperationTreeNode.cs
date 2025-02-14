@@ -18,14 +18,16 @@ sealed class IOperationTreeNode
     public required bool HasSymbolChildren { get; init; }
     [DataMember(Name = "hasIOperationChildren"), JsonPropertyName("hasIOperationChildren")]
     public required bool HasIOperationChildren { get; init; }
+    [DataMember(Name = "treeId"), JsonPropertyName("treeId")]
+    public required int TreeId { get; init; }
     [DataMember(Name = "symbolId"), JsonPropertyName("symbolId")]
-    public required int SymbolId { get; init; }
+    public required int? SymbolId { get; init; }
     [DataMember(Name = "ioperationInfo"), JsonPropertyName("ioperationInfo")]
     public required IOperationNodeInformation? IOperationInfo { get; init; }
     [DataMember(Name = "properties"), JsonPropertyName("properties")]
     public required IReadOnlyDictionary<string, string>? Properties { get; init; }
 
-    public static IOperationTreeNode SymbolToTreeItem(ISymbol? symbol, bool hasIOperationChildren, LinePositionSpan originalLocation, int symbolId, ImmutableArray<int> childIds)
+    public static IOperationTreeNode SymbolToTreeItem(ISymbol? symbol, bool hasIOperationChildren, LinePositionSpan originalLocation, int treeId, ImmutableArray<int> childIds, SymbolDetailVisualizerCache symbolDetailCache)
     {
         if (symbol == null)
         {
@@ -35,7 +37,8 @@ sealed class IOperationTreeNode
                 NodeType = new() { Symbol = "Root", SymbolKind = "None" },
                 HasSymbolChildren = !childIds.IsEmpty,
                 HasIOperationChildren = hasIOperationChildren,
-                SymbolId = symbolId,
+                TreeId = treeId,
+                SymbolId = null,
                 Range = ProtocolConversions.LinePositionToRange(originalLocation),
                 IOperationInfo = null,
                 Properties = null
@@ -55,7 +58,8 @@ sealed class IOperationTreeNode
             NodeType = new() { Symbol = symbol.Name, SymbolKind = symbol.GetKindString() },
             HasSymbolChildren = !childIds.IsEmpty,
             HasIOperationChildren = hasIOperationChildren,
-            SymbolId = symbolId,
+            TreeId = treeId,
+            SymbolId = symbolDetailCache.GetId(symbol),
             Range = ProtocolConversions.LinePositionToRange(originalLocation),
             IOperationInfo = null,
             Properties = properties,
@@ -76,7 +80,8 @@ static class IOperationExtensions
             NodeType = new() { Symbol = nodeName, SymbolKind = "Class" },
             HasSymbolChildren = false,
             HasIOperationChildren = operation.ChildOperations.Any(),
-            SymbolId = containingSymbolId,
+            TreeId = containingSymbolId,
+            SymbolId = null,
             Range = ProtocolConversions.LinePositionToRange(operationSpan),
             IOperationInfo = IOperationNodeInformation.FromOperation(operation, ioperationId, parentInfo, out var properties),
             Properties = properties,

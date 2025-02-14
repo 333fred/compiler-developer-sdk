@@ -45,7 +45,7 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
         {
             Debug.Assert(node is CompilationUnitSyntax);
 
-            idToSymbol.Add(0, new(node, Symbol: null, ParentId: -1, SymbolId: 0, ChildIds: []));
+            idToSymbol.Add(0, new(node, Symbol: null, ParentId: -1, TreeId: 0, ChildIds: []));
             syntaxToId.Add(node, 0);
 
             if (semanticModel.GetDeclaredSymbol(node) is { } tlsSymbol)
@@ -203,17 +203,17 @@ sealed record DocumentIOperationInformation(IReadOnlyDictionary<int, SyntaxAndSy
     }
 }
 
-record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int SymbolId, ImmutableArray<int> ChildIds)
+record SyntaxAndSymbol(SyntaxNode Syntax, ISymbol? Symbol, int ParentId, int TreeId, ImmutableArray<int> ChildIds)
 {
     private static readonly StrongBox<IOperationChildren> s_empty = new(new(ImmutableDictionary<IOperation, (int, string?, bool)>.Empty, ImmutableDictionary<int, (IOperation, string?)>.Empty, []));
     private static readonly ImmutableArray<int> s_noAttributes = [0];
 
     private StrongBox<IOperationChildren>? _operationToId = null;
 
-    public IOperationTreeNode ToTreeNode(SourceText text)
+    public IOperationTreeNode ToTreeNode(SourceText text, SymbolDetailVisualizerCache symbolDetailCache)
     {
         var location = text.Lines.GetLinePositionSpan(Syntax.Span);
-        return IOperationTreeNode.SymbolToTreeItem(Symbol, HasIOperationChildren, location, SymbolId, ChildIds);
+        return IOperationTreeNode.SymbolToTreeItem(Symbol, HasIOperationChildren, location, TreeId, ChildIds, symbolDetailCache);
     }
 
     public bool HasIOperationChildren

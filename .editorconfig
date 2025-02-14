@@ -245,7 +245,7 @@ dotnet_naming_rule.enums_should_be_pascalcase.style = pascalcase
 
 dotnet_naming_rule.local_functions_should_be_pascalcase.severity = suggestion
 dotnet_naming_rule.local_functions_should_be_pascalcase.symbols = local_functions
-dotnet_naming_rule.local_functions_should_be_pascalcase.style = pascalcase
+dotnet_naming_rule.local_functions_should_be_pascalcase.style = camelcase
 
 dotnet_naming_rule.non_field_members_should_be_pascalcase.severity = suggestion
 dotnet_naming_rule.non_field_members_should_be_pascalcase.symbols = non_field_members
@@ -361,3 +361,6 @@ dotnet_naming_style.s_camelcase.required_suffix =
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
 
+
+# IDE0130: Namespace does not match folder structure
+dotnet_diagnostic.IDE0130.severity = none

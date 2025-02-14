@@ -11,10 +11,10 @@ sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTok
     {
         var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
         Debug.Assert(root != null);
-        BuildIdMap(root, out var nodeMap, out var idMap);
+        buildIdMap(root, out var nodeMap, out var idMap);
         return new DocumentSyntaxInformation(nodeMap, idMap);
 
-        static void BuildIdMap(SyntaxNode syntaxNode, out Dictionary<int, SyntaxNodeOrTokenOrTrivia> nodeMap, out Dictionary<SyntaxNodeOrTokenOrTrivia, int> idMap)
+        static void buildIdMap(SyntaxNode syntaxNode, out Dictionary<int, SyntaxNodeOrTokenOrTrivia> nodeMap, out Dictionary<SyntaxNodeOrTokenOrTrivia, int> idMap)
         {
             // First time we've seen this file. Build the map
             int id = 0;
@@ -31,17 +31,17 @@ sealed record DocumentSyntaxInformation(IReadOnlyDictionary<int, SyntaxNodeOrTok
                     var token = nodeOrToken.AsToken();
                     if (token.HasLeadingTrivia)
                     {
-                        MapTrivia(ref id, token.LeadingTrivia, isLeading: true, nodeMap, idMap);
+                        mapTrivia(ref id, token.LeadingTrivia, isLeading: true, nodeMap, idMap);
                     }
 
                     if (token.HasTrailingTrivia)
                     {
-                        MapTrivia(ref id, token.TrailingTrivia, isLeading: false, nodeMap, idMap);
+                        mapTrivia(ref id, token.TrailingTrivia, isLeading: false, nodeMap, idMap);
                     }
                 }
             }
 
-            static void MapTrivia(ref int id, SyntaxTriviaList triviaList, bool isLeading, Dictionary<int, SyntaxNodeOrTokenOrTrivia> nodeMap, Dictionary<SyntaxNodeOrTokenOrTrivia, int> idMap)
+            static void mapTrivia(ref int id, SyntaxTriviaList triviaList, bool isLeading, Dictionary<int, SyntaxNodeOrTokenOrTrivia> nodeMap, Dictionary<SyntaxNodeOrTokenOrTrivia, int> idMap)
             {
                 foreach (var element in triviaList)
                 {

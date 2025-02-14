@@ -13,4 +13,6 @@ static class Endpoints
     public const string IOperationNodeParent = "operationTree/parentNode";
 
     public const string IlForContainingSymbol = "il/containingSymbol";
+
+    public const string SymbolDetails = "symbol/details";
 }

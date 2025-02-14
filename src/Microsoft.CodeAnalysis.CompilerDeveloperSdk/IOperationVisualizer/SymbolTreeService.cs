@@ -36,22 +36,24 @@ sealed class SymbolTreeService() : AbstractCompilerDeveloperSdkLspServiceDocumen
     public override async Task<IOperationTreeResponse> HandleRequestAsync(SymbolTreeRequest request, RequestContext context, CancellationToken cancellationToken)
     {
         var cache = context.GetRequiredService<IOperationVisualizerCache>();
+        var symbolDetailDocumentCache = context.GetRequiredService<SymbolDetailVisualizerDocumentCache>();
 
         var document = context.GetRequiredDocument();
 
         var cacheEntry = await cache.GetOrAddCachedEntry(document, cancellationToken);
+        var symbolDetailCacheEntry = await symbolDetailDocumentCache.GetOrAddCachedEntry(document, cancellationToken);
         var text = await document.GetTextAsync(cancellationToken);
 
         return request.ParentSymbolId switch
         {
             null or -1 => new IOperationTreeResponse
             {
-                Nodes = [cacheEntry.IdToSymbol[0].ToTreeNode(text)]
+                Nodes = [cacheEntry.IdToSymbol[0].ToTreeNode(text, symbolDetailCacheEntry)]
             },
             int parentId when cacheEntry.IdToSymbol.TryGetValue(parentId, out var parentItem) =>
                 new IOperationTreeResponse
                 {
-                    Nodes = [.. parentItem.ChildIds.Select(i => cacheEntry.IdToSymbol[i].ToTreeNode(text))]
+                    Nodes = [.. parentItem.ChildIds.Select(i => cacheEntry.IdToSymbol[i].ToTreeNode(text, symbolDetailCacheEntry))]
                 },
             _ => throw new ArgumentException("Invalid parent symbol id", nameof(request))
         };

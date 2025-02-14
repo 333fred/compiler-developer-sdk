@@ -160,7 +160,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
 
             const children = await this.server.experimental.sendServerRequest(
                 symbolTree,
-                { textDocument: identifier, parentSymbolId: element?.node.symbolId },
+                { textDocument: identifier, parentSymbolId: element?.node.treeId },
                 lsp.CancellationToken.None);
 
             if (!children || !Array.isArray(children.nodes)) {
@@ -182,7 +182,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
         else if (element.kind === "operationsRootNode") {
             const operationsRoot = await this.server.experimental.sendServerRequest(
                 operationChildren,
-                { textDocument: element.identifier, parentSymbolId: element.parentNode.symbolId },
+                { textDocument: element.identifier, parentSymbolId: element.parentNode.treeId },
                 lsp.CancellationToken.None);
 
             if (!operationsRoot || !Array.isArray(operationsRoot.nodes)) {
@@ -197,7 +197,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
                 operationChildren,
                 {
                     textDocument: element.identifier,
-                    parentSymbolId: parent.symbolId,
+                    parentSymbolId: parent.treeId,
                     parentIOperationId: parent.ioperationInfo!.ioperationId,
                     parentIOperationPropertyName: element.child.name
                 },
@@ -255,7 +255,7 @@ class OperationTreeProvider implements vscode.TreeDataProvider<TreeNode>, vscode
 
         const response = await this.server.experimental.sendServerRequest(ioperationNodeParentRequest, {
             textDocument: identifier,
-            childSymbolId: childNode.symbolId,
+            childSymbolId: childNode.treeId,
             childIOperationId: childNode.ioperationInfo?.ioperationId
         }, lsp.CancellationToken.None);
         if (!response || !response.parent) {
@@ -379,7 +379,8 @@ interface IOperationTreeNode {
     range: lsp.Range;
     hasSymbolChildren: boolean;
     hasIOperationChildren: boolean;
-    symbolId: number;
+    treeId: number;
+    symbolId?: number;
     ioperationInfo?: IOperationNodeInformation;
     properties?: object;
 }

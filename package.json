@@ -48,6 +48,12 @@
                     "name": "IOperation Tree",
                     "type": "tree",
                     "when": "config.compilerDeveloperSdk.enableIOperationVisualizer && compilerDeveloperSdk.loaded"
+                },
+                {
+                    "id": "symbolDetailView",
+                    "name": "Symbol Details",
+                    "type": "tree",
+                    "when": "compilerDeveloperSdk.loaded && config.compilerDeveloperSdk.enableSymbolDetailView"
                 }
             ]
         },
@@ -58,6 +64,10 @@
             },
             {
                 "view": "operationTree",
+                "contents": "No C# file opened."
+            },
+            {
+                "view": "symbolDetailView",
                 "contents": "No C# file opened."
             }
         ],
@@ -144,6 +154,12 @@
                     "default": false,
                     "title": "Verbose Logging",
                     "description": "Enable verbose logging for the .NET Compiler Developer SDK"
+                },
+                "compilerDeveloperSdk.enableSymbolDetailView": {
+                    "type": "boolean",
+                    "default": true,
+                    "title": "C# Symbol Details View",
+                    "description": "Enable the C# Symbol Details View"
                 }
             }
         }
