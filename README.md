@@ -44,6 +44,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.5
+
+* Fix a bug with top-level-statements IOperation display in some cases.
+
 ### 0.4.4
 
 * Update Roslyn dependencies to fix compat with C# extension version 2.41.
