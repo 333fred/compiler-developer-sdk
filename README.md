@@ -44,6 +44,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.6
+
+* Ensure the dll is loaded from the right path. Fixes https://github.com/333fred/compiler-developer-sdk/issues/14.
+
 ### 0.4.5
 
 * Fix a bug with top-level-statements IOperation display in some cases.

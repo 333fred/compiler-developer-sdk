@@ -3,7 +3,7 @@
     "displayName": ".NET Compiler Developer SDK",
     "publisher": "333fred",
     "description": "VS Code extension for working with and on the Roslyn compiler.",
-    "version": "0.4.5",
+    "version": "0.4.6",
     "icon": "images/roslyn_icon_color.png",
     "repository": {
         "type": "git",
@@ -24,7 +24,7 @@
     "main": "./dist/extension.js",
     "contributes": {
         "csharpExtensionLoadPaths": [
-            "Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"
+            "dist/Microsoft.CodeAnalysis.CompilerDeveloperSdk.dll"
         ],
         "viewsContainers": {
             "activitybar": [
