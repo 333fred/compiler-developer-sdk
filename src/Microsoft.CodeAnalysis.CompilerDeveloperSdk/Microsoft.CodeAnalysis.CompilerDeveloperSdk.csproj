@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
@@ -27,7 +27,7 @@
              $(MSBuildThisFileDirectory)..\..\dist\ICSharpCode.Decompiler.dll">
 
     <Copy
-        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net8.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
+        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net9.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
         DestinationFolder="$(MSBuildThisFileDirectory)..\..\dist">
     </Copy>
   </Target>

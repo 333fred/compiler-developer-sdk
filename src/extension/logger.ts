@@ -15,7 +15,7 @@ class LoggerImpl implements Logger {
 
     dateString(): string {
         const now = new Date();
-        return `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}.${now.getMilliseconds()}`
+        return `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}.${now.getMilliseconds()}`;
     }
 
     log(message: string) {

@@ -40,6 +40,12 @@ const extensionConfig = {
       }
     ]
   },
+  ignoreWarnings: [
+    {
+      module: /vscode-languageserver-types/,
+      message: /Critical dependency/
+    }
+  ],
   devtool: 'nosources-source-map',
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
