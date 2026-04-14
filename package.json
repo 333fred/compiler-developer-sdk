@@ -161,17 +161,21 @@
     },
     "devDependencies": {
         "@types/mocha": "^10.0.10",
-        "@types/node": "^22.13.0",
-        "@types/vscode": "^1.108.0",
-        "@typescript-eslint/eslint-plugin": "^8.24.0",
-        "@typescript-eslint/parser": "^8.24.0",
+        "@types/node": "^25.6.0",
+        "@types/vscode": "^1.115.0",
+        "@typescript-eslint/eslint-plugin": "^8.58.2",
+        "@typescript-eslint/parser": "^8.58.2",
         "@vscode/test-electron": "^2.5.2",
-        "eslint": "^8.57.1",
-        "glob": "^11.0.0",
-        "mocha": "^11.0.1",
-        "ts-loader": "^9.5.2",
-        "typescript": "^5.7.3",
-        "webpack": "^5.99.9",
-        "webpack-cli": "^5.1.4"
+        "eslint": "^10.2.0",
+        "glob": "^13.0.6",
+        "mocha": "^11.7.5",
+        "ts-loader": "^9.5.7",
+        "typescript": "^6.0.2",
+        "webpack": "^5.106.1",
+        "webpack-cli": "^7.0.2"
+    },
+    "overrides": {
+        "diff": "8.0.3",
+        "serialize-javascript": "7.0.5"
     }
 }
