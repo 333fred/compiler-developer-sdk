@@ -29,6 +29,10 @@ Big thanks to @ashmind and [Sharplab.io](https://sharplab.io) for both the idea 
 
 This extension depends on the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp).
 
+## Development Notes
+
+The `overrides` section in `package.json` pins vulnerable transitive dependencies that are pulled in by the JavaScript toolchain. These entries are intentional and should stay in place until the upstream packages move to versions that no longer require them.
+
 ## Extension Settings
 
 * `"compilerdevelopersdk.enableSyntaxVisualizer"` - Turn on or off the C# Syntax Visualizer (defaults to on).
