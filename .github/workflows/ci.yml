@@ -42,13 +42,13 @@ jobs:
     - run: npm run compile
     - run: vsce package
     - name: Archive logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: logs
         path: |
           logs
     - name: Archive VSIX
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: vsix
         path: |
