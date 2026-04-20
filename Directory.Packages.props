@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NoWarn>NU1507</NoWarn>
 
-    <MicrosoftCodeAnalysisVersion>5.3.0-2.25603.1</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>5.7.0-1.26220.1</MicrosoftCodeAnalysisVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />

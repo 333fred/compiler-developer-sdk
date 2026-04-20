@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
@@ -19,7 +19,7 @@
 
   <Target Name="VscePrepublish"
     DependsOnTargets="Build"
-    Inputs="$(TargetPath));
+    Inputs="$(TargetPath);
             $(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)
             $(PkgICSharpCode_Decompiler)"
     Outputs="$(MSBuildThisFileDirectory)..\..\dist\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;
@@ -27,7 +27,7 @@
              $(MSBuildThisFileDirectory)..\..\dist\ICSharpCode.Decompiler.dll">
 
     <Copy
-        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\net9.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
+        SourceFiles="$(TargetPath);$(PkgMicrosoft_CodeAnalysis_ExternalAccess_CompilerDeveloperSDK)\lib\$(TargetFramework)\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll;$(PkgICSharpCode_Decompiler)\lib\netstandard2.0\ICSharpCode.Decompiler.dll"
         DestinationFolder="$(MSBuildThisFileDirectory)..\..\dist">
     </Copy>
   </Target>
