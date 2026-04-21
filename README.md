@@ -44,6 +44,12 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.7
+
+* Update the extension backend to target .NET 10 and newer Roslyn dependencies.
+* Migrate the JavaScript tooling to the current ESLint flat config setup.
+* Fix NuGet package source mappings and VSIX packaging for the updated compiler SDK layout.
+
 ### 0.4.6
 
 * Ensure the dll is loaded from the right path. Fixes https://github.com/333fred/compiler-developer-sdk/issues/14.
