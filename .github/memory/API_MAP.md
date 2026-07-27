@@ -50,5 +50,5 @@ The repository's public integration surface consists of VS Code contributions an
 
 - Endpoint strings must remain identical in `Endpoints.cs` and frontend `RequestType` declarations.
 - JSON property names must remain identical across TypeScript interfaces and C# request/response models.
-- Protocol changes must account for both Newtonsoft.Json and System.Text.Json attributes used by the C# extension.
+- Protocol models and converters use System.Text.Json attributes and APIs.
 - Contributions in `package.json` are part of the user-visible extension API and require matching implementation registration.

@@ -10,7 +10,7 @@ coverage: Repository directories, ownership, status, and notable entry points
 | `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/SyntaxVisualizer/` | Active | Syntax cache and custom syntax endpoints. |
 | `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/IOperationVisualizer/` | Active | Symbol/IOperation cache and custom operation endpoints. |
 | `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/IlVisualizer/` | Active | Emit, assembly resolution, decompilation, and disassembly. |
-| `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/Protocol/` | Active/vendor-derived | Minimal LSP protocol types and conversions; see its third-party notice. |
+| `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/Protocol/` | Active/vendor-derived | Minimal LSP protocol types and System.Text.Json conversions; see its third-party notice. |
 | `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/Util/` | Active | Shared cache and response helpers. |
 | `.github/memory/` | Active docs | On-demand repository knowledge; `INDEX.md` is the loading map. |
 | `.github/skills/update-docs/` | Active docs | Mandatory knowledge-base maintenance checklist. |

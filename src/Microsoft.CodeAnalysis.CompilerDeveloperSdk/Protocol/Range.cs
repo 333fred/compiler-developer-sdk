@@ -7,8 +7,6 @@ namespace Roslyn.LanguageServer.Protocol
     using System;
     using System.Collections.Generic;
     using System.Runtime.Serialization;
-    using Newtonsoft.Json;
-
     /// <summary>
     /// Class which represents a text document text range.
     ///
@@ -21,7 +19,6 @@ namespace Roslyn.LanguageServer.Protocol
         /// Gets or sets the text start position.
         /// </summary>
         [DataMember(Name = "start"), JsonPropertyName("start")]
-        [JsonProperty(Required = Required.Always)]
         public required Position Start
         {
             get;
@@ -32,7 +29,6 @@ namespace Roslyn.LanguageServer.Protocol
         /// Gets or sets the text end position.
         /// </summary>
         [DataMember(Name = "end"), JsonPropertyName("end")]
-        [JsonProperty(Required = Required.Always)]
         public required Position End
         {
             get;
