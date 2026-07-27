@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <NoWarn>NU1507</NoWarn>
 
     <MicrosoftCodeAnalysisVersion>5.7.0-1.26220.1</MicrosoftCodeAnalysisVersion>
@@ -11,5 +12,6 @@
     <PackageVersion Include="Microsoft.CommonLanguageServerProtocol.Framework" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSdk" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
+    <PackageVersion Include="MessagePack" Version="2.5.302" />
   </ItemGroup>
 </Project>
