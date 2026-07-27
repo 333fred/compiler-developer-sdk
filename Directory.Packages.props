@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <NoWarn>NU1507</NoWarn>
 
-    <MicrosoftCodeAnalysisVersion>5.7.0-1.26220.1</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>5.10.0-1.26352.10</MicrosoftCodeAnalysisVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(MicrosoftCodeAnalysisVersion)" />

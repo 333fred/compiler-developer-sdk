@@ -44,6 +44,11 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### 0.4.8
+
+* Update Roslyn dependencies to match the C# extension.
+* Use the Compiler Developer SDK ExternalAccess assembly supplied by the C# extension instead of packaging a separate copy.
+
 ### 0.4.7
 
 * Update the extension backend to target .NET 10 and newer Roslyn dependencies.
