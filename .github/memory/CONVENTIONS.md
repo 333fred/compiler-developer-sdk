@@ -25,7 +25,7 @@ Formatting and standard language conventions are enforced by `.editorconfig`, Ty
 
 - Request handlers are stateless; document-derived state belongs in dedicated cache services.
 - Pin required transitive NuGet updates centrally in `Directory.Packages.props`.
-- Runtime backend dependencies must be copied into `dist` by `VscePrepublish`.
+- Runtime backend dependencies must be copied into `dist` by `VscePrepublish`, except assemblies supplied by the host C# extension, such as the Compiler Developer SDK ExternalAccess assembly.
 - Do not edit generated `dist/`, `out/`, `bin/`, or `obj/` artifacts.
 
 ## Errors and Logging

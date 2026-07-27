@@ -21,6 +21,7 @@ The .NET Compiler Developer SDK is a VS Code extension for exploring Roslyn synt
 - The extension depends on `ms-dotnettools.csharp`; it does not start its own language server.
 - `csharpExtensionExports.ts` describes only the external C# extension exports consumed by this app.
 - `csharpExtensionLoadPaths` loads the packaged backend DLL into the C# language server.
+- The backend compiles against the C# extension's ExternalAccess API version and uses the ExternalAccess assembly supplied by the C# extension at runtime.
 - Backend handlers are stateless Compiler Developer SDK services bound to names in `Endpoints.cs`.
 
 ## Caching and Lazy Loading
