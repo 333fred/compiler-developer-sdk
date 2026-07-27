@@ -1,140 +1,94 @@
-# Copilot Instructions - Performance Guidelines
+# compiler-developer-sdk - Copilot Instructions
 
-This VS Code extension visualizes Roslyn compiler internals (syntax trees, IOperation trees, IL). Performance is critical since visualizers update in real-time as users type.
+## Project Overview
 
-## Architecture Overview
+This VS Code extension visualizes Roslyn syntax trees, IOperation trees, IL, and decompiled C# in real time.
 
-- **C# Backend** (`src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/`): LSP services that interact with Roslyn APIs
-- **TypeScript Frontend** (`src/extension/`): VS Code extension that communicates via the C# extension's language server
+- `src/extension/` contains the TypeScript VS Code frontend.
+- `src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/` contains custom C# services loaded into the C# extension language server.
 
-## Caching Patterns
+Performance matters because visualizers update while users type.
 
-### C# Side
-The backend uses `ConditionalWeakTable`-based caching via `VisualizerCache<T>`. Follow this pattern for document-level data:
+## Project Structure
 
-```csharp
-// Extend VisualizerCache<T> for new cached data structures
-// Use GetOrAddCachedEntry() to lazily build and cache per-document data
-protected async Task<TEntry> GetOrAddCachedEntry(Document document, Func<Task<TEntry>> factory)
+```text
+src/
+  extension/                                      # VS Code frontend
+  Microsoft.CodeAnalysis.CompilerDeveloperSdk/
+    SyntaxVisualizer/                            # Syntax services/cache
+    IOperationVisualizer/                        # Operation services/cache
+    IlVisualizer/                                # Emit/decompilation
+    Protocol/                                    # Request models
+    Util/                                        # Shared helpers
+.github/
+  memory/                                        # Repository knowledge
+  skills/update-docs/                            # Documentation maintenance
 ```
 
-- `DocumentSyntaxInformation`: Caches syntax node ID mappings per document
-- `DocumentIOperationInformation`: Caches symbol/IOperation ID mappings per document
+## Build and Test
 
-**Key principle**: Build ID maps once per document version, reuse on subsequent requests.
+```bash
+# Backend changes
+dotnet build src/Microsoft.CodeAnalysis.CompilerDeveloperSdk/Microsoft.CodeAnalysis.CompilerDeveloperSdk.csproj
 
-### TypeScript Side
-Tree data providers cache node data in memory. When modifying providers:
-- Preserve the `_nodeMap` pattern for O(1) node lookups by ID
-- Clear caches appropriately on document changes via `_onDidChangeTreeData` events
+# Frontend changes
+npm run compile
+npm run lint
 
-## Async & Cancellation
-
-### C# Services
-All LSP handlers are async. When adding new services:
-- Use `async ValueTask<T>` for lightweight operations
-- Pass `CancellationToken` through to Roslyn APIs that support it
-- Avoid blocking calls; prefer `await` over `.Result` or `.Wait()`
-
-```csharp
-// Good: Roslyn APIs support cancellation
-var root = await document.GetSyntaxRootAsync(cancellationToken);
-var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+# Packaging changes
+npm run vscode:prepublish
 ```
 
-### TypeScript Side
-- Event handlers should not block the extension host
-- Use `async/await` consistently; avoid `.then()` chains
-- The `editorChangeCausedDataChange` flag pattern prevents redundant tree updates—preserve this when modifying event handlers
+There is no tracked automated test suite. Use targeted builds and manually validate affected views or commands in the Extension Development Host.
 
-## Tree Traversal Performance
+## Code Style
 
-### Syntax Trees
-When traversing syntax, prefer targeted methods over full tree walks:
+- Follow `.editorconfig`, strict TypeScript, and ESLint.
+- Keep TypeScript/C# protocol contracts synchronized.
+- Preserve lazy loading, document-version caching, cancellation, and event guards.
+- Do not edit generated output.
+- Load `.github/memory/CONVENTIONS.md` when changing implementation.
 
-```csharp
-// Prefer: Targeted lookup
-var node = root.FindNode(textSpan);
-var token = root.FindToken(position);
+## Validation Checklist
 
-// Avoid in hot paths: Full tree enumeration
-root.DescendantNodesAndTokensAndSelf(descendIntoTrivia: true)
-```
+1. Read `.github/memory/INDEX.md`.
+2. For non-trivial work, read `ARCHITECTURE.md` and `CONVENTIONS.md`.
+3. Build the modified frontend or backend.
+4. Run `npm run lint` for TypeScript changes.
+5. Validate packaging when changing manifests, dependencies, load paths, or runtime assets.
+6. Manually validate affected interactive behavior when practical.
+7. Run the `update-docs` skill.
 
-Only include trivia in traversal when explicitly needed (e.g., building the initial ID map).
+## Agent Orientation
 
-### IOperation Trees
-Semantic operations are more expensive than syntax operations:
+1. Read `.github/memory/INDEX.md` first.
+2. Load `ARCHITECTURE.md` and `CONVENTIONS.md` for non-trivial work.
+3. Load other memory files only as directed by the index and task.
+4. Verify memory claims against current code.
+5. Run the update-docs skill after making changes.
 
-```csharp
-// Cache and reuse SemanticModel within a request
-var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+### Memory
 
-// GetOperation() is relatively cheap once you have the model
-var operation = semanticModel.GetOperation(syntaxNode, cancellationToken);
-```
+`.github/memory/` is the persistent knowledge base. Keep it small and focused. Correct stale claims immediately and record only durable knowledge that will help future work.
 
-## Event Handling
+New memory files use only `coverage:` frontmatter and must be added to `INDEX.md`.
 
-### Document Changes
-Both visualizer providers refresh on `onDidChangeTextDocument`. When modifying this:
-- Only refresh for C# files (`document.languageId === 'csharp'`)
-- The refresh invalidates cached data, triggering lazy rebuilds on next request
+### Documentation Update Obligation
 
-### Cursor Position Changes
-`onDidChangeTextEditorSelection` triggers node-at-range queries. Current implementation:
-- Checks `treeView.visible` before making requests
-- Uses `editorChangeCausedDataChange` to avoid redundant updates
+- File ownership changed: update `FILE_MAP.md`.
+- Commands, settings, endpoints, or DTOs changed: update `API_MAP.md`.
+- Component boundaries, caching, or request flow changed: update `ARCHITECTURE.md`.
+- A non-obvious constraint was established: update `CONVENTIONS.md`.
+- A limitation or workaround was found: update `KNOWN_ISSUES.md`.
+- User-facing behavior changed: update `README.md`.
 
-Maintain these guards when adding new selection-based features.
+### Skills
 
-## Request/Response Patterns
+Repository skills live under `.github/skills/<skill-name>/SKILL.md`. Run `update-docs` at the end of code-changing tasks.
 
-### Protocol Design
-Requests use URI + Position/Range. Responses return node arrays with IDs for lazy child loading:
+### Rules
 
-```typescript
-// Lazy loading pattern: getChildren() fetches only when expanded
-async getChildren(element?: TreeNode): Promise<TreeNode[]> {
-    // Root: fetch top-level nodes
-    // Element: fetch children by parent ID
-}
-```
-
-### Keep Responses Lightweight
-- Return only data needed for tree display (ID, label, kind, span)
-- Defer expensive data (full properties) to separate info requests
-- Use numeric IDs instead of serializing full node structures
-
-## IL Decompilation
-
-The `IlForContainingSymbolService` is the most expensive operation. It:
-1. Emits compilation to memory stream (parallel task)
-2. Decompiles using ICSharpCode.Decompiler
-
-When modifying IL visualization:
-- Preserve the parallel emit pattern
-- Use minimal `DecompilerSettings` (avoid unnecessary features)
-- Handle emit failures gracefully with user-friendly error messages
-
-## Consistency Between Visualizers
-
-Keep Syntax Tree and IOperation Tree visualizers consistent in:
-- Caching strategies
-- Event handling patterns
-- Tree item presentation (icons, collapsible states)
-- Error handling and logging
-
-When adding features to one visualizer, consider if it applies to the other.
-
-## Logging
-
-Use the `Logger` abstraction with verbose logging guarded by configuration:
-
-```typescript
-if (verboseLogging) {
-    logger.log(`Detailed debug info: ${data}`);
-}
-```
-
-Avoid logging in tight loops or per-keystroke handlers unless verbose mode is enabled.
+- Keep request handlers stateless and document-derived state in cache services.
+- Avoid repeated whole-tree or semantic work in interactive paths.
+- Do not add broad catches, silent failures, or success-shaped fallbacks.
+- Ensure required runtime backend dependencies are copied into the VSIX.
