@@ -38,8 +38,12 @@ jobs:
       run: dotnet build --no-restore -bl:logs\Build.binlog
     - name: Test
       run: dotnet test --no-build --verbosity normal -bl:logs\Test.binlog
-    - run: npm ci
-    - run: npm run compile
+    - name: Install npm dependencies
+      run: npm ci
+    - name: Lint
+      run: npm run lint
+    - name: Compile extension
+      run: npm run compile
     - run: vsce package
     - name: Archive logs
       uses: actions/upload-artifact@v4

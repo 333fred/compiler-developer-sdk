@@ -31,10 +31,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Extension Settings
 
-* `"compilerdevelopersdk.enableSyntaxVisualizer"` - Turn on or off the C# Syntax Visualizer (defaults to on).
-* `"compilerdevelopersdk.enableIOperationVisualizer"` - Turn on or off the C# IOperation Visualizer (defaults to on).
-* `"compilerdevelopersdk.syncCursorWithTree"` - Reveal the tree node of the cursor location when clicking in a C# file (defaults to on).
-* `"compilerdevelopersdk.verboseLogging"` - Turn on or off extra logging for troubleshooting purposes (defaults to off).
+* `"compilerDeveloperSdk.enableSyntaxVisualizer"` - Turn on or off the C# Syntax Visualizer (defaults to on).
+* `"compilerDeveloperSdk.enableIOperationVisualizer"` - Turn on or off the C# IOperation Visualizer (defaults to on).
+* `"compilerDeveloperSdk.syncCursorWithTree"` - Reveal the tree node of the cursor location when clicking in a C# file (defaults to on).
+* `"compilerDeveloperSdk.verboseLogging"` - Turn on or off extra logging for troubleshooting purposes (defaults to off).
 
 ## Known Issues
 

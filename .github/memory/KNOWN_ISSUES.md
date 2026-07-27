@@ -19,19 +19,3 @@ coverage: Unresolved repository or product issues that require a local workaroun
 **Description:** The `Extension Tests` launch configuration points to `out/test/suite/index`, and tasks reference `npm: watch-tests`, but `package.json` has no `watch-tests` script and no test source exists.
 
 **Workaround:** Do not use the `Extension Tests` configuration until a test suite and matching scripts are restored.
-
-## README Uses Incorrect Setting Casing
-
-**Affected area:** `README.md`
-
-**Description:** Documented `compilerdevelopersdk.*` setting names do not match the case-sensitive `compilerDeveloperSdk.*` identifiers in `package.json`.
-
-**Workaround:** Use the identifiers from `package.json`.
-
-## CI Does Not Run ESLint
-
-**Affected area:** `.github/workflows/ci.yml`
-
-**Description:** CI compiles and packages the extension without running `npm run lint`.
-
-**Workaround:** Run `npm run lint` locally for TypeScript changes.
