@@ -28,6 +28,10 @@ Formatting and standard language conventions are enforced by `.editorconfig`, Ty
 - Runtime backend dependencies must be copied into `dist` by `VscePrepublish`, except assemblies supplied by the host C# extension, such as the Compiler Developer SDK ExternalAccess assembly.
 - Do not edit generated `dist/`, `out/`, `bin/`, or `obj/` artifacts.
 
+## CI and Workflow Security
+
+- GitHub Actions workflows must declare explicit least-privilege `permissions` instead of relying on repository defaults.
+
 ## Errors and Logging
 
 - Surface failures for interactive commands; do not add broad catches or silent success fallbacks.
