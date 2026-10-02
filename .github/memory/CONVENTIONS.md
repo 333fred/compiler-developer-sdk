@@ -9,6 +9,7 @@ Formatting and standard language conventions are enforced by `.editorconfig`, Ty
 ## Protocol
 
 - Keep endpoint names and JSON property names synchronized between TypeScript and C#.
+- Send the active C# document URI, not its filesystem path, as the `textDocument` identifier for custom requests.
 - Serializer-facing C# properties use both `DataMember` and `JsonPropertyName` for C# extension compatibility.
 - Keep responses lightweight; use document-version-local numeric IDs instead of serializing Roslyn object graphs.
 

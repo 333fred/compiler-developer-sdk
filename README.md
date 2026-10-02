@@ -44,6 +44,10 @@ This extension depends on the [C# extension](https://marketplace.visualstudio.co
 
 ## Release Notes
 
+### Unreleased
+
+* Send the editor's document URI when requesting IL and decompiled C#.
+
 ### 0.4.8
 
 * Update Roslyn dependencies to match the C# extension.
