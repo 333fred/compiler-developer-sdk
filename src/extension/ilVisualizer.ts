@@ -21,7 +21,7 @@ export function createIlVisualizer(csharpExtension: CSharpExtension, logger: Log
 
         const document = activeEditor.document;
         const vscodePosition = activeEditor.selection.active;
-        const textDocument = lsp.TextDocumentIdentifier.create(document.fileName);
+        const textDocument = lsp.TextDocumentIdentifier.create(document.uri.toString(true));
         const position = lsp.Position.create(vscodePosition.line, vscodePosition.character);
 
         try {
